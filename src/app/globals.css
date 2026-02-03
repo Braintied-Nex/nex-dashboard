@@ -1,97 +1,75 @@
 @import "tailwindcss";
 
 /* ============================================
-   NEX — GLASS SPATIAL DESIGN SYSTEM
-   Futuristic, minimal, atmospheric
+   NEX — SPATIAL GLASS DESIGN
+   Futuristic command center aesthetic
    ============================================ */
 
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  
-  /* Core palette */
-  --black: 8 8 8;
+  /* Core */
+  --black: 10 10 10;
   --white: 255 255 255;
-  
-  /* Gray scale */
-  --gray-100: 245 245 245;
-  --gray-200: 220 220 220;
-  --gray-300: 180 180 180;
-  --gray-400: 140 140 140;
-  --gray-500: 100 100 100;
-  --gray-600: 70 70 70;
-  --gray-700: 50 50 50;
-  --gray-800: 30 30 30;
-  --gray-900: 18 18 18;
-  --gray-950: 12 12 12;
 }
 
-/* Dark theme (default) */
+/* Dark (default) */
 :root, .dark, [data-theme="dark"] {
   color-scheme: dark;
   
   --bg: var(--black);
   --fg: var(--white);
-  --fg-secondary: var(--gray-300);
-  --fg-tertiary: var(--gray-500);
+  --fg-2: 200 200 200;
+  --fg-3: 120 120 120;
+  --fg-4: 80 80 80;
   
-  /* Glass surfaces */
-  --glass-bg: var(--gray-800) / 0.35;
-  --glass-bg-hover: var(--gray-700) / 0.4;
-  --glass-border: var(--white) / 0.08;
-  --glass-border-subtle: var(--white) / 0.04;
-  
-  /* Inset surfaces (for nested elements) */
-  --inset-bg: var(--white) / 0.05;
-  --inset-bg-hover: var(--white) / 0.08;
+  /* Glass - very transparent */
+  --glass: 40 40 40 / 0.4;
+  --glass-hover: 50 50 50 / 0.5;
+  --glass-border: 255 255 255 / 0.07;
+  --glass-inset: 255 255 255 / 0.04;
+  --glass-inset-hover: 255 255 255 / 0.07;
 }
 
-/* Light theme */
+/* Light */
 [data-theme="light"] {
   color-scheme: light;
   
-  --bg: var(--gray-100);
-  --fg: var(--gray-900);
-  --fg-secondary: var(--gray-600);
-  --fg-tertiary: var(--gray-500);
+  --bg: 245 245 245;
+  --fg: 20 20 20;
+  --fg-2: 60 60 60;
+  --fg-3: 120 120 120;
+  --fg-4: 160 160 160;
   
-  --glass-bg: var(--white) / 0.7;
-  --glass-bg-hover: var(--white) / 0.8;
-  --glass-border: var(--black) / 0.08;
-  --glass-border-subtle: var(--black) / 0.04;
-  
-  --inset-bg: var(--black) / 0.04;
-  --inset-bg-hover: var(--black) / 0.06;
+  --glass: 255 255 255 / 0.6;
+  --glass-hover: 255 255 255 / 0.75;
+  --glass-border: 0 0 0 / 0.06;
+  --glass-inset: 0 0 0 / 0.03;
+  --glass-inset-hover: 0 0 0 / 0.05;
 }
 
-/* === Base === */
-* {
-  border-color: rgb(var(--glass-border-subtle));
-}
-
+/* Base */
 html {
-  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: rgb(var(--bg));
   color: rgb(var(--fg));
-  line-height: 1.5;
   overflow: hidden;
 }
 
-/* === Glass System === */
+/* Glass */
 .glass {
-  background: rgb(var(--glass-bg));
-  backdrop-filter: blur(60px) saturate(180%);
-  -webkit-backdrop-filter: blur(60px) saturate(180%);
+  background: rgb(var(--glass));
+  backdrop-filter: blur(50px) saturate(180%);
+  -webkit-backdrop-filter: blur(50px) saturate(180%);
+}
+
+.glass-border {
   border: 1px solid rgb(var(--glass-border));
-  border-radius: 24px;
 }
 
 .glass-panel {
-  background: rgb(var(--glass-bg));
+  background: rgb(var(--glass));
   backdrop-filter: blur(40px) saturate(150%);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
   border: 1px solid rgb(var(--glass-border));
@@ -99,60 +77,42 @@ body {
 }
 
 .glass-inset {
-  background: rgb(var(--inset-bg));
-  border-radius: 14px;
-}
-
-.glass-inset-hover {
+  background: rgb(var(--glass-inset));
+  border-radius: 12px;
   transition: background 0.15s ease;
 }
-.glass-inset-hover:hover {
-  background: rgb(var(--inset-bg-hover));
+
+.glass-inset:hover {
+  background: rgb(var(--glass-inset-hover));
 }
 
-/* === Typography === */
-.text-primary { color: rgb(var(--fg)); }
-.text-secondary { color: rgb(var(--fg-secondary)); }
-.text-tertiary { color: rgb(var(--fg-tertiary)); }
+/* Text */
+.text-1 { color: rgb(var(--fg)); }
+.text-2 { color: rgb(var(--fg-2)); }
+.text-3 { color: rgb(var(--fg-3)); }
+.text-4 { color: rgb(var(--fg-4)); }
 
-/* === Animations === */
+/* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s ease-out;
 }
 
-/* === Scrollbar === */
-::-webkit-scrollbar {
-  width: 6px;
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { 
+  background: rgb(var(--fg) / 0.1); 
+  border-radius: 3px; 
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgb(var(--white) / 0.1);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--white) / 0.15);
-}
-
-/* === Focus === */
-*:focus-visible {
-  outline: 1px solid rgb(var(--white) / 0.3);
-  outline-offset: 2px;
-}
-
-/* === Shader === */
+/* Shader */
 #ambient-shader {
   position: fixed;
   inset: 0;
   z-index: -1;
-  pointer-events: none;
 }
