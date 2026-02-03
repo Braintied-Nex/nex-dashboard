@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
+import { AmbientShader } from '@/components/ambient-shader'
 import { Sidebar } from '@/components/sidebar'
 
 const inter = Inter({ 
@@ -23,7 +24,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark">
-          <div className="flex h-screen bg-[rgb(var(--bg))]">
+          <AmbientShader />
+          <div className="relative flex h-screen">
             <Sidebar />
             <main className="flex-1 overflow-auto">
               {children}

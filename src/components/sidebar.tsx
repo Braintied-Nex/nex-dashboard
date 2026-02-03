@@ -9,7 +9,7 @@ import {
   Target, 
   BarChart3,
   Settings,
-  Zap,
+  Sparkles,
   Moon,
   Sun,
   Monitor,
@@ -46,20 +46,20 @@ export function Sidebar() {
   const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor
 
   return (
-    <div className="flex h-screen w-64 flex-col glass border-r border-[rgb(var(--border))]">
+    <div className="flex h-screen w-72 flex-col glass">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 px-6 border-b border-[rgb(var(--border))]">
-        <div className="flex h-9 w-9 items-center justify-center rounded-[--radius-lg] bg-[rgb(var(--accent))]">
-          <Zap className="h-5 w-5 text-[rgb(var(--accent-fg))]" />
+      <div className="flex h-20 items-center gap-4 px-8">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[rgb(var(--accent))] to-[rgb(var(--accent))]/70 shadow-lg shadow-[rgb(var(--accent))]/20">
+          <Sparkles className="h-6 w-6 text-white" />
         </div>
         <div>
-          <span className="text-lg font-bold">Nex</span>
-          <span className="text-xs text-[rgb(var(--muted-fg))] block">Command Center</span>
+          <span className="text-xl font-semibold tracking-tight">Nex</span>
+          <span className="text-xs text-[rgb(var(--fg-muted))] block tracking-wide">Command Center</span>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 px-4 py-6">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -67,14 +67,17 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-[--radius-lg] px-3 py-2.5 text-sm font-medium',
-                'transition-colors duration-[--duration-fast]',
+                'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium',
+                'transition-all duration-200 ease-out',
                 isActive
-                  ? 'bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]'
-                  : 'text-[rgb(var(--muted-fg))] hover:bg-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]'
+                  ? 'bg-[rgb(var(--surface-raised))] text-[rgb(var(--fg))] shadow-sm'
+                  : 'text-[rgb(var(--fg-muted))] hover:bg-[rgb(var(--surface))]/50 hover:text-[rgb(var(--fg))]'
               )}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className={cn(
+                "h-5 w-5 transition-colors",
+                isActive && "text-[rgb(var(--accent))]"
+              )} />
               {item.name}
             </Link>
           )
@@ -82,27 +85,27 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-[rgb(var(--border))] p-4 space-y-4">
+      <div className="p-6 space-y-4">
         {/* Theme Toggle */}
         <button
           onClick={cycleTheme}
           className={cn(
-            'flex items-center gap-3 w-full rounded-[--radius-lg] px-3 py-2',
-            'text-sm text-[rgb(var(--muted-fg))]',
-            'hover:bg-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]',
-            'transition-colors duration-[--duration-fast]'
+            'flex items-center gap-3 w-full rounded-2xl px-4 py-3',
+            'text-sm text-[rgb(var(--fg-muted))]',
+            'hover:bg-[rgb(var(--surface))]/50 hover:text-[rgb(var(--fg))]',
+            'transition-all duration-200 ease-out'
           )}
         >
           <ThemeIcon className="h-5 w-5" />
-          <span className="capitalize">{theme} Mode</span>
+          <span className="capitalize">{theme}</span>
         </button>
 
         {/* Profile */}
-        <div className="flex items-center gap-3 px-3">
-          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[rgb(var(--accent))] to-orange-500" />
+        <div className="flex items-center gap-4 px-4 py-2">
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[rgb(var(--accent))] to-blue-600 shadow-lg shadow-[rgb(var(--accent))]/20" />
           <div>
             <p className="text-sm font-medium">Nex</p>
-            <p className="text-xs text-[rgb(var(--muted-fg))]">AI Co-founder</p>
+            <p className="text-xs text-[rgb(var(--fg-muted))]">AI Co-founder</p>
           </div>
         </div>
       </div>

@@ -13,8 +13,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           className={cn(
             'w-full px-3 py-2 appearance-none',
             'bg-[rgb(var(--muted))] border border-[rgb(var(--border))]',
-            'rounded-[--radius-lg] text-[rgb(var(--fg))]',
-            'transition-colors duration-[--duration-fast]',
+            'rounded-lg text-[rgb(var(--fg))]',
+            'transition-colors duration-150',
             'focus:border-[rgb(var(--ring))] focus:outline-none',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'pr-10',

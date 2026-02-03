@@ -7,37 +7,32 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', children, ...props }, ref) => {
+  ({ className, variant = 'primary', size = 'md', disabled, ...props }, ref) => {
     return (
       <button
         ref={ref}
+        disabled={disabled}
         className={cn(
-          // Base styles
-          'inline-flex items-center justify-center gap-2 font-medium transition-all duration-[--duration-fast]',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
-          
-          // Size variants
+          'inline-flex items-center justify-center gap-2 font-medium',
+          'rounded-2xl transition-all duration-200 ease-out',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2',
+          'disabled:opacity-50 disabled:pointer-events-none',
+          'active:scale-[0.98]',
           {
-            'text-sm px-3 py-1.5 rounded-[--radius-md]': size === 'sm',
-            'text-sm px-4 py-2 rounded-[--radius-lg]': size === 'md',
-            'text-base px-6 py-3 rounded-[--radius-lg]': size === 'lg',
+            // Variants
+            'bg-[rgb(var(--accent))] text-white shadow-lg shadow-[rgb(var(--accent))]/20 hover:shadow-xl hover:shadow-[rgb(var(--accent))]/30': variant === 'primary',
+            'bg-[rgb(var(--surface-raised))] text-[rgb(var(--fg))] hover:bg-[rgb(var(--border))]': variant === 'secondary',
+            'bg-transparent text-[rgb(var(--fg-muted))] hover:bg-[rgb(var(--surface))] hover:text-[rgb(var(--fg))]': variant === 'ghost',
+            'bg-[rgb(var(--error))]/10 text-[rgb(var(--error))] hover:bg-[rgb(var(--error))]/20': variant === 'danger',
+            // Sizes
+            'text-sm px-4 py-2': size === 'sm',
+            'text-sm px-6 py-3': size === 'md',
+            'text-base px-8 py-4': size === 'lg',
           },
-          
-          // Color variants
-          {
-            'bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))] hover:brightness-110': variant === 'primary',
-            'bg-[rgb(var(--muted))] text-[rgb(var(--fg))] hover:bg-[rgb(var(--border))]': variant === 'secondary',
-            'bg-transparent text-[rgb(var(--muted-fg))] hover:bg-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]': variant === 'ghost',
-            'bg-[rgb(var(--error)/0.15)] text-[rgb(var(--error))] hover:bg-[rgb(var(--error)/0.25)]': variant === 'danger',
-          },
-          
           className
         )}
         {...props}
-      >
-        {children}
-      </button>
+      />
     )
   }
 )

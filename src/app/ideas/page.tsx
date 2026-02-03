@@ -234,7 +234,7 @@ export default async function IdeasPage() {
                       className={`p-6 hover:bg-[rgb(var(--muted))]/50 transition-colors ${timeSensitivityColors[idea.time_sensitivity]}`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="h-10 w-10 rounded-[--radius] bg-[rgb(var(--muted))] flex items-center justify-center flex-shrink-0">
+                        <div className="h-10 w-10 rounded-lg bg-[rgb(var(--muted))] flex items-center justify-center flex-shrink-0">
                           {ideaTypeIcon(idea.idea_type)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -292,7 +292,7 @@ export default async function IdeasPage() {
                       className={`p-4 hover:bg-[rgb(var(--muted))]/50 transition-colors ${timeSensitivityColors[idea.time_sensitivity]}`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="h-8 w-8 rounded-[--radius] bg-[rgb(var(--muted))] flex items-center justify-center flex-shrink-0">
+                        <div className="h-8 w-8 rounded-lg bg-[rgb(var(--muted))] flex items-center justify-center flex-shrink-0">
                           {ideaTypeIcon(idea.idea_type)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -342,10 +342,10 @@ export default async function IdeasPage() {
               <CardContent>
                 <textarea
                   placeholder="Capture a content idea..."
-                  className="w-full px-4 py-3 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-[--radius] text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors resize-none text-sm"
+                  className="w-full px-4 py-3 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-lg text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors resize-none text-sm"
                   rows={3}
                 />
-                <button className="w-full mt-3 px-4 py-2 bg-[rgb(var(--accent))] text-white rounded-[--radius] text-sm font-medium hover:opacity-90 transition-opacity">
+                <button className="w-full mt-3 px-4 py-2 bg-[rgb(var(--accent))] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
                   Add Idea
                 </button>
               </CardContent>

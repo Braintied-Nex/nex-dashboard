@@ -62,7 +62,7 @@ export default async function SettingsPage() {
                 <input
                   type="text"
                   defaultValue="Nex"
-                  className="w-full px-4 py-2 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-[--radius] text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors"
+                  className="w-full px-4 py-2 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-lg text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors"
                 />
               </div>
               <div>
@@ -70,7 +70,7 @@ export default async function SettingsPage() {
                 <input
                   type="text"
                   defaultValue="AI Co-founder @ Braintied"
-                  className="w-full px-4 py-2 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-[--radius] text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors"
+                  className="w-full px-4 py-2 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-lg text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors"
                 />
               </div>
               <div>
@@ -78,7 +78,7 @@ export default async function SettingsPage() {
                 <textarea
                   rows={3}
                   defaultValue="Building Sentigen - AI Chief of Staff for founders. Sharing insights on AI, startups, and building in public."
-                  className="w-full px-4 py-2 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-[--radius] text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors resize-none"
+                  className="w-full px-4 py-2 bg-[rgb(var(--muted))] border border-[rgb(var(--border))] rounded-lg text-[rgb(var(--fg))] focus:outline-none focus:border-[rgb(var(--accent))] transition-colors resize-none"
                 />
               </div>
             </CardContent>
@@ -96,7 +96,7 @@ export default async function SettingsPage() {
               {platforms?.map((platform) => (
                 <div key={platform.id} className="px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-[--radius] bg-[rgb(var(--muted))] flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-lg bg-[rgb(var(--muted))] flex items-center justify-center">
                       {platformIcons[platform.name] || <Zap className="h-5 w-5" />}
                     </div>
                     <div>
@@ -113,7 +113,7 @@ export default async function SettingsPage() {
                         Connected
                       </Badge>
                     ) : (
-                      <button className="px-4 py-2 bg-[rgb(var(--muted))] hover:bg-[rgb(var(--border))] text-[rgb(var(--fg))] rounded-[--radius] text-sm font-medium transition-colors">
+                      <button className="px-4 py-2 bg-[rgb(var(--muted))] hover:bg-[rgb(var(--border))] text-[rgb(var(--fg))] rounded-lg text-sm font-medium transition-colors">
                         Connect
                       </button>
                     )}
@@ -174,7 +174,7 @@ export default async function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg]">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg">
                 <p className="text-sm font-medium mb-2">Automated Tasks</p>
                 <ul className="text-sm text-[rgb(var(--muted-fg))] space-y-2">
                   <li className="flex items-center gap-2">
@@ -253,10 +253,10 @@ export default async function SettingsPage() {
                 Irreversible actions that affect your data
               </p>
               <div className="space-y-2">
-                <button className="w-full px-4 py-2 bg-red-500/10 text-red-400 rounded-[--radius] text-sm hover:bg-red-500/20 transition-colors border border-red-500/20">
+                <button className="w-full px-4 py-2 bg-red-500/10 text-red-400 rounded-lg text-sm hover:bg-red-500/20 transition-colors border border-red-500/20">
                   Clear All Metrics
                 </button>
-                <button className="w-full px-4 py-2 bg-red-500/10 text-red-400 rounded-[--radius] text-sm hover:bg-red-500/20 transition-colors border border-red-500/20">
+                <button className="w-full px-4 py-2 bg-red-500/10 text-red-400 rounded-lg text-sm hover:bg-red-500/20 transition-colors border border-red-500/20">
                   Reset All Data
                 </button>
               </div>

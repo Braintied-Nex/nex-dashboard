@@ -158,28 +158,28 @@ export default async function ResearchPage() {
               and discover content patterns that work. This intelligence feeds into content strategy.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto">
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <Users className="h-6 w-6 text-blue-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">Thought Leaders</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
                   People whose content style and reach I study
                 </p>
               </div>
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <Building2 className="h-6 w-6 text-red-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">Competitors</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
                   Companies to track for positioning and content
                 </p>
               </div>
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <TrendingUp className="h-6 w-6 text-green-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">Trends</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
                   Topics gaining momentum I should cover
                 </p>
               </div>
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <Lightbulb className="h-6 w-6 text-yellow-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">Patterns</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
@@ -294,7 +294,7 @@ export default async function ResearchPage() {
                   {trends.map((trend) => (
                     <div 
                       key={trend.id} 
-                      className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] hover:bg-[rgb(var(--border))]/50 transition-colors"
+                      className="p-4 bg-[rgb(var(--muted))] rounded-lg hover:bg-[rgb(var(--border))]/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-sm">{trend.topic}</h4>
@@ -341,7 +341,7 @@ export default async function ResearchPage() {
                   {contentPatterns.map((pattern) => (
                     <div 
                       key={pattern.id} 
-                      className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg]"
+                      className="p-4 bg-[rgb(var(--muted))] rounded-lg"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div>
@@ -395,7 +395,7 @@ export default async function ResearchPage() {
               <CardContent>
                 <div className="space-y-4">
                   {researchLogs.map((log) => (
-                    <div key={log.id} className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg]">
+                    <div key={log.id} className="p-4 bg-[rgb(var(--muted))] rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-medium">{log.topic}</p>
                         <div className="flex items-center gap-2">

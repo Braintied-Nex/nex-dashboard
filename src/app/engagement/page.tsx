@@ -192,28 +192,28 @@ export default async function EngagementPage() {
               and help you respond thoughtfully and consistently.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto">
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <AtSign className="h-6 w-6 text-blue-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">Mentions</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
                   When someone @mentions you
                 </p>
               </div>
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <MessageCircle className="h-6 w-6 text-green-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">Comments</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
                   Replies to your posts
                 </p>
               </div>
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <Quote className="h-6 w-6 text-purple-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">Quote Tweets</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
                   When your content is quoted
                 </p>
               </div>
-              <div className="p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] text-left">
+              <div className="p-4 bg-[rgb(var(--muted))] rounded-lg text-left">
                 <Mail className="h-6 w-6 text-yellow-400 mb-2" />
                 <h3 className="font-semibold text-sm mb-1">DMs</h3>
                 <p className="text-xs text-[rgb(var(--muted-fg))]">
@@ -281,17 +281,17 @@ export default async function EngagementPage() {
                           
                           {/* Context if exists */}
                           {item.context && (
-                            <div className="text-xs text-[rgb(var(--muted-fg))] bg-[rgb(var(--muted))] p-2 rounded-[--radius] mb-3">
+                            <div className="text-xs text-[rgb(var(--muted-fg))] bg-[rgb(var(--muted))] p-2 rounded-lg mb-3">
                               <span className="opacity-75">Replying to: </span>{item.context}
                             </div>
                           )}
                           
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            <button className="px-3 py-1.5 bg-[rgb(var(--accent))] text-white rounded-[--radius] text-xs font-medium hover:opacity-90 transition-opacity">
+                            <button className="px-3 py-1.5 bg-[rgb(var(--accent))] text-white rounded-lg text-xs font-medium hover:opacity-90 transition-opacity">
                               Draft Response
                             </button>
-                            <button className="px-3 py-1.5 bg-[rgb(var(--muted))] text-[rgb(var(--fg))] rounded-[--radius] text-xs font-medium hover:bg-[rgb(var(--border))] transition-colors">
+                            <button className="px-3 py-1.5 bg-[rgb(var(--muted))] text-[rgb(var(--fg))] rounded-lg text-xs font-medium hover:bg-[rgb(var(--border))] transition-colors">
                               Skip
                             </button>
                             {item.source_url && (
@@ -299,7 +299,7 @@ export default async function EngagementPage() {
                                 href={item.source_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3 py-1.5 text-[rgb(var(--muted-fg))] rounded-[--radius] text-xs font-medium hover:text-[rgb(var(--fg))] transition-colors flex items-center gap-1"
+                                className="px-3 py-1.5 text-[rgb(var(--muted-fg))] rounded-lg text-xs font-medium hover:text-[rgb(var(--fg))] transition-colors flex items-center gap-1"
                               >
                                 <ExternalLink className="h-3 w-3" />
                                 View

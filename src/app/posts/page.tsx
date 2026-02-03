@@ -235,7 +235,7 @@ export default function PostsPage() {
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-[--radius-lg] text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               statusFilter === status 
                 ? 'glass-elevated text-[rgb(var(--fg))]' 
                 : 'text-[rgb(var(--muted-fg))] hover:text-[rgb(var(--fg))]'
@@ -393,7 +393,7 @@ export default function PostsPage() {
                             )}
                             {threadPost.theme && (
                               <span 
-                                className="text-xs px-2 py-0.5 rounded-[--radius-md]"
+                                className="text-xs px-2 py-0.5 rounded-md"
                                 style={{ 
                                   backgroundColor: `${threadPost.theme.color || '#666'}20`, 
                                   color: threadPost.theme.color || '#a1a1aa' 
@@ -428,7 +428,7 @@ export default function PostsPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                           {showMenu === threadPost.id && (
-                            <div className="absolute right-0 top-full mt-1 glass-elevated rounded-[--radius-lg] py-1 min-w-[140px] z-10">
+                            <div className="absolute right-0 top-full mt-1 glass-elevated rounded-lg py-1 min-w-[140px] z-10">
                               <button 
                                 onClick={() => openEditPost(threadPost)}
                                 className="w-full px-4 py-2 text-left text-sm hover:bg-[rgb(var(--muted))] flex items-center gap-2"

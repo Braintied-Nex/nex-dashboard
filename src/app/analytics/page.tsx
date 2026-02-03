@@ -216,7 +216,7 @@ export default async function AnalyticsPage() {
               Once you start publishing content, I&apos;ll track impressions, engagement, and other metrics here. 
               The feedback loop will help optimize future content.
             </p>
-            <div className="mt-6 p-4 bg-[rgb(var(--muted))] rounded-[--radius-lg] max-w-md mx-auto text-left">
+            <div className="mt-6 p-4 bg-[rgb(var(--muted))] rounded-lg max-w-md mx-auto text-left">
               <p className="text-sm font-medium mb-2">What I&apos;ll track:</p>
               <ul className="text-sm text-[rgb(var(--muted-fg))] space-y-1">
                 <li>• Impressions & reach per post</li>

@@ -202,7 +202,7 @@ export default async function StrategyPage() {
               {/* Platform Header */}
               <div className="p-6 border-b border-[rgb(var(--border))] flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-[--radius-xl] bg-[rgb(var(--muted))] flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-xl bg-[rgb(var(--muted))] flex items-center justify-center">
                     {platformIcons[platform?.icon || 'mail']}
                   </div>
                   <div>
