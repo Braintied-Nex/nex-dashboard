@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Platform, Post, Theme, Strategy } from '@/lib/supabase/types'
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import { 
   FileText, 
   Calendar, 
@@ -8,14 +9,18 @@ import {
   Twitter,
   Linkedin,
   Github,
-  Mail
+  Mail,
+  ArrowRight,
+  Sparkles
 } from 'lucide-react'
+import Link from 'next/link'
 
 const platformIcons: Record<string, React.ReactNode> = {
   twitter: <Twitter className="h-5 w-5" />,
   linkedin: <Linkedin className="h-5 w-5" />,
   github: <Github className="h-5 w-5" />,
   mail: <Mail className="h-5 w-5" />,
+  'message-square': <Mail className="h-5 w-5" />,
 }
 
 export default async function Dashboard() {
@@ -25,17 +30,14 @@ export default async function Dashboard() {
     { data: platforms },
     { data: posts },
     { data: themes },
-    { data: strategies }
   ] = await Promise.all([
     supabase.from('nex_platforms').select('*'),
     supabase.from('nex_posts').select('*').order('created_at', { ascending: false }).limit(5),
     supabase.from('nex_themes').select('*'),
-    supabase.from('nex_strategy').select('*, nex_platforms(*)')
   ]) as [
     { data: Platform[] | null },
     { data: Post[] | null },
     { data: Theme[] | null },
-    { data: Strategy[] | null }
   ]
 
   const stats = [
@@ -43,145 +45,180 @@ export default async function Dashboard() {
       name: 'Total Posts', 
       value: posts?.length || 0, 
       icon: FileText,
-      change: '+12%',
-      changeType: 'positive'
+      change: 'Ready to create',
+      trend: 'neutral'
     },
     { 
       name: 'Scheduled', 
       value: posts?.filter(p => p.status === 'scheduled').length || 0, 
       icon: Calendar,
-      change: '3 this week',
-      changeType: 'neutral'
+      change: 'This week',
+      trend: 'neutral'
     },
     { 
       name: 'Platforms', 
       value: platforms?.length || 0, 
       icon: Target,
-      change: 'All active',
-      changeType: 'positive'
+      change: 'Connected',
+      trend: 'up'
     },
     { 
       name: 'Engagement', 
       value: '—', 
       icon: TrendingUp,
       change: 'Coming soon',
-      changeType: 'neutral'
+      trend: 'neutral'
     },
   ]
 
+  const statusVariants: Record<string, 'success' | 'warning' | 'info' | 'error' | 'default'> = {
+    published: 'success',
+    scheduled: 'info',
+    draft: 'warning',
+    idea: 'default',
+    archived: 'default',
+  }
+
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-zinc-400 mt-1">Welcome back, Galen. Here&apos;s what&apos;s happening.</p>
+        <div className="flex items-center gap-2 text-[rgb(var(--accent))] mb-2">
+          <Sparkles className="h-4 w-4" />
+          <span className="text-sm font-medium">Command Center</span>
+        </div>
+        <h1 className="text-3xl font-bold mb-1">Good evening, Galen</h1>
+        <p className="text-[rgb(var(--muted-fg))]">Here&apos;s what&apos;s happening across your platforms.</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div key={stat.name} className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-            <div className="flex items-center justify-between">
-              <stat.icon className="h-5 w-5 text-zinc-500" />
-              <span className={`text-xs ${
-                stat.changeType === 'positive' ? 'text-green-500' : 'text-zinc-500'
-              }`}>
-                {stat.change}
-              </span>
-            </div>
-            <p className="mt-4 text-3xl font-semibold">{stat.value}</p>
-            <p className="text-sm text-zinc-500">{stat.name}</p>
-          </div>
+        {stats.map((stat, i) => (
+          <Card key={stat.name} variant="glass" className="animate-slide-up" style={{ animationDelay: `${i * 50}ms` }}>
+            <CardContent className="py-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 rounded-[--radius-lg] bg-[rgb(var(--muted))]">
+                  <stat.icon className="h-5 w-5 text-[rgb(var(--muted-fg))]" />
+                </div>
+                <span className={`text-xs font-medium ${
+                  stat.trend === 'up' ? 'text-[rgb(var(--success))]' : 'text-[rgb(var(--muted-fg))]'
+                }`}>
+                  {stat.change}
+                </span>
+              </div>
+              <p className="text-3xl font-semibold mb-1">{stat.value}</p>
+              <p className="text-sm text-[rgb(var(--muted-fg))]">{stat.name}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Platform Status */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-800">
-          <div className="p-6 border-b border-zinc-800">
-            <h2 className="text-lg font-semibold">Platform Status</h2>
-          </div>
-          <div className="p-6 space-y-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Platforms</CardTitle>
+            <Link 
+              href="/settings" 
+              className="text-sm text-[rgb(var(--accent))] hover:underline flex items-center gap-1"
+            >
+              Manage <ArrowRight className="h-3 w-3" />
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {platforms?.map((platform) => (
               <div key={platform.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-[--radius-lg] bg-[rgb(var(--muted))] flex items-center justify-center">
                     {platformIcons[platform.icon || 'mail'] || <Mail className="h-5 w-5" />}
                   </div>
                   <div>
-                    <p className="font-medium">{platform.name}</p>
-                    <p className="text-sm text-zinc-500">{platform.handle || 'Not connected'}</p>
+                    <p className="font-medium text-sm">{platform.name}</p>
+                    <p className="text-xs text-[rgb(var(--muted-fg))]">{platform.handle || 'Not connected'}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  platform.api_enabled 
-                    ? 'bg-green-500/20 text-green-400' 
-                    : 'bg-zinc-800 text-zinc-400'
-                }`}>
+                <Badge variant={platform.api_enabled ? 'success' : 'default'}>
                   {platform.api_enabled ? 'Connected' : 'Manual'}
-                </span>
+                </Badge>
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Content Themes */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-800">
-          <div className="p-6 border-b border-zinc-800">
-            <h2 className="text-lg font-semibold">Content Themes</h2>
-          </div>
-          <div className="p-6 space-y-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Content Themes</CardTitle>
+            <Link 
+              href="/strategy" 
+              className="text-sm text-[rgb(var(--accent))] hover:underline flex items-center gap-1"
+            >
+              Strategy <ArrowRight className="h-3 w-3" />
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {themes?.map((theme) => (
               <div key={theme.id} className="flex items-center gap-3">
                 <div 
-                  className="h-3 w-3 rounded-full" 
+                  className="h-3 w-3 rounded-full shrink-0" 
                   style={{ backgroundColor: theme.color || '#666' }}
                 />
-                <div className="flex-1">
-                  <p className="font-medium">{theme.name}</p>
-                  <p className="text-sm text-zinc-500">{theme.description}</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm">{theme.name}</p>
+                  <p className="text-xs text-[rgb(var(--muted-fg))] truncate">{theme.description}</p>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Posts */}
-      <div className="mt-8 bg-zinc-900 rounded-xl border border-zinc-800">
-        <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Recent Posts</h2>
-          <a href="/posts" className="text-sm text-yellow-500 hover:text-yellow-400">
-            View all →
-          </a>
-        </div>
-        <div className="divide-y divide-zinc-800">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Recent Posts</CardTitle>
+          <Link 
+            href="/posts" 
+            className="text-sm text-[rgb(var(--accent))] hover:underline flex items-center gap-1"
+          >
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
+        </CardHeader>
+        <div className="divide-y divide-[rgb(var(--border))]">
           {posts && posts.length > 0 ? (
             posts.map((post) => (
-              <div key={post.id} className="p-6 flex items-start gap-4">
-                <div className={`px-2 py-1 rounded text-xs font-medium ${
-                  post.status === 'published' ? 'bg-green-500/20 text-green-400' :
-                  post.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' :
-                  post.status === 'draft' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-zinc-800 text-zinc-400'
-                }`}>
+              <div key={post.id} className="px-6 py-4 flex items-start gap-4">
+                <Badge variant={statusVariants[post.status] || 'default'}>
                   {post.status}
-                </div>
+                </Badge>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{post.title || post.content.slice(0, 60)}</p>
-                  <p className="text-sm text-zinc-500 mt-1 line-clamp-2">{post.content}</p>
+                  <p className="font-medium text-sm truncate">
+                    {post.title || post.content.slice(0, 60)}
+                  </p>
+                  <p className="text-xs text-[rgb(var(--muted-fg))] mt-1 line-clamp-2">
+                    {post.content}
+                  </p>
                 </div>
+                <span className="text-xs text-[rgb(var(--muted-fg))] shrink-0">
+                  {new Date(post.created_at).toLocaleDateString()}
+                </span>
               </div>
             ))
           ) : (
-            <div className="p-12 text-center text-zinc-500">
-              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>No posts yet. Create your first post!</p>
+            <div className="px-6 py-12 text-center">
+              <FileText className="h-8 w-8 mx-auto mb-3 text-[rgb(var(--muted-fg))] opacity-50" />
+              <p className="text-[rgb(var(--muted-fg))] mb-2">No posts yet</p>
+              <Link 
+                href="/posts" 
+                className="text-sm text-[rgb(var(--accent))] hover:underline"
+              >
+                Create your first post →
+              </Link>
             </div>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
