@@ -4,20 +4,19 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
   LayoutDashboard, 
+  Target, 
+  Search,
   FileText, 
   Calendar, 
-  Target, 
   BarChart3,
   Settings,
   Sparkles,
   Moon,
-  Sun,
-  Search
+  Sun
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useTheme } from './theme-provider'
 
-const navigation = [
+const nav = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Strategy', href: '/strategy', icon: Target },
   { name: 'Research', href: '/research', icon: Search },
@@ -31,76 +30,70 @@ export function Sidebar() {
   const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
 
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-  }
-
   return (
-    <div className="flex h-screen w-56 flex-col glass">
+    <aside className="w-52 h-screen flex flex-col glass border-r-0 rounded-none rounded-r-3xl">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgb(var(--fg))]/10">
-          <Sparkles className="h-4 w-4 text-[rgb(var(--fg))]" />
+      <div className="px-5 py-6 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-xl glass-inset flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-secondary" />
         </div>
         <div>
-          <span className="text-base font-semibold">Nex</span>
-          <span className="text-[10px] text-[rgb(var(--fg-muted))] block">Command Center</span>
+          <div className="font-semibold text-sm text-primary">Nex</div>
+          <div className="text-[10px] text-tertiary">Command Center</div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 px-3 py-2">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href
+      {/* Nav */}
+      <nav className="flex-1 px-3 space-y-0.5">
+        {nav.map(item => {
+          const active = pathname === item.href
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium',
-                'transition-all duration-150',
-                isActive
-                  ? 'glass-inset text-[rgb(var(--fg))]'
-                  : 'text-[rgb(var(--fg-muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--surface-inset))]'
-              )}
+              className={`
+                flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
+                transition-all duration-150
+                ${active 
+                  ? 'glass-inset text-primary' 
+                  : 'text-secondary hover:text-primary hover:bg-[rgb(var(--inset-bg))]'
+                }
+              `}
             >
-              <item.icon className="h-4 w-4" />
-              {item.name}
-              {isActive && (
-                <div className="ml-auto h-1.5 w-1.5 rounded-full bg-[rgb(var(--fg))]" />
-              )}
+              <item.icon className="w-4 h-4" />
+              <span className="flex-1">{item.name}</span>
+              {active && <span className="w-1.5 h-1.5 rounded-full bg-[rgb(var(--fg))]" />}
             </Link>
           )
         })}
       </nav>
 
       {/* Footer */}
-      <div className="p-4 space-y-3">
-        {/* Theme Toggle */}
+      <div className="px-3 pb-5 space-y-2">
+        {/* Theme toggle */}
         <button
-          onClick={toggleTheme}
-          className={cn(
-            'flex items-center gap-3 w-full rounded-xl px-3 py-2.5',
-            'text-[13px] text-[rgb(var(--fg-muted))]',
-            'hover:bg-[rgb(var(--surface-inset))] hover:text-[rgb(var(--fg))]',
-            'transition-all duration-150'
-          )}
+          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+          className="
+            w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+            text-[13px] text-secondary hover:text-primary
+            hover:bg-[rgb(var(--inset-bg))] transition-all duration-150
+          "
         >
-          {resolvedTheme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          {resolvedTheme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           <span>{resolvedTheme === 'dark' ? 'Dark' : 'Light'} Mode</span>
         </button>
 
         {/* Status */}
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[rgb(var(--fg))]/5 text-[rgb(var(--fg-muted))] text-xs font-bold">
+          <div className="w-7 h-7 rounded-lg glass-inset flex items-center justify-center text-[11px] font-bold text-secondary">
             N
           </div>
           <div>
-            <p className="text-[12px] font-medium text-[rgb(var(--fg))]">Active</p>
-            <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Always-on intelligence</p>
+            <div className="text-[12px] font-medium text-primary">Active</div>
+            <div className="text-[10px] text-tertiary">Always-on intelligence</div>
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   )
 }

@@ -11,7 +11,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Nex Dashboard',
+  title: 'Nex',
   description: 'AI Co-founder Command Center',
 }
 
@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans`}>
         <ThemeProvider defaultTheme="dark">
           <AmbientShader />
           <div className="relative flex h-screen">

@@ -16,29 +16,18 @@ import {
 import Link from 'next/link'
 
 const platformIcons: Record<string, React.ReactNode> = {
-  'X/Twitter': <Twitter className="h-4 w-4" />,
-  'LinkedIn': <Linkedin className="h-4 w-4" />,
-  'Reddit': <MessageSquare className="h-4 w-4" />,
-  'Substack': <BookOpen className="h-4 w-4" />,
+  'X/Twitter': <Twitter className="w-4 h-4" />,
+  'LinkedIn': <Linkedin className="w-4 h-4" />,
+  'Reddit': <MessageSquare className="w-4 h-4" />,
+  'Substack': <BookOpen className="w-4 h-4" />,
 }
-
-const contentTypeIcons: Record<string, React.ReactNode> = {
-  'thread': <Twitter className="h-4 w-4" />,
-  'carousel': <Linkedin className="h-4 w-4" />,
-  'ama': <MessageSquare className="h-4 w-4" />,
-  'demo': <Twitter className="h-4 w-4" />,
-  'case_study': <Linkedin className="h-4 w-4" />,
-  'post': <FileText className="h-4 w-4" />,
-}
-
-const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export default async function Dashboard() {
   const supabase = await createClient()
   
   const [
     { data: platforms },
-    { data: scheduledPosts },
+    { data: posts },
     { data: thoughtLeaders },
     { data: competitors },
   ] = await Promise.all([
@@ -50,152 +39,130 @@ export default async function Dashboard() {
 
   const readyPlatforms = platforms?.filter(p => p.api_enabled).length || 0
   const totalPlatforms = platforms?.length || 0
-  const postsThisWeek = scheduledPosts?.filter(p => p.status === 'scheduled' || p.status === 'draft').length || 0
+  const postsThisWeek = posts?.length || 0
 
-  // Group posts by day
-  const postsByDay: Record<number, typeof scheduledPosts> = {}
-  scheduledPosts?.forEach(post => {
-    if (post.scheduled_for) {
-      const day = new Date(post.scheduled_for).getDay()
-      const adjustedDay = day === 0 ? 6 : day - 1 // Convert to Mon=0
-      if (!postsByDay[adjustedDay]) postsByDay[adjustedDay] = []
-      postsByDay[adjustedDay]?.push(post)
-    }
-  })
+  // Sample content for the week
+  const weekContent = [
+    { day: 'Mon', title: 'Why AI Chief of Staff > AI Assistant', type: 'Thread', status: 'ready', icon: Twitter },
+    { day: 'Tue', title: '5 Tasks Sentigen Handles Proactively', type: 'Carousel', status: 'ready', icon: Linkedin },
+    { day: 'Wed', title: 'Building AI for Execs - r/artificial', type: 'AMA', status: 'draft', icon: MessageSquare },
+    { day: 'Thu', title: '30-sec inbox triage video', type: 'Demo', status: 'draft', icon: Twitter },
+    { day: 'Fri', title: 'How Sentigen saves 2hrs/day', type: 'Case Study', status: 'idea', icon: Linkedin },
+  ]
 
   return (
-    <div className="min-h-screen p-8 animate-fade-in">
+    <div className="min-h-screen p-10 animate-in">
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header */}
-        <header className="space-y-1">
-          <p className="text-xs font-medium text-[rgb(var(--fg-muted))] flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3" />
-            Command Center
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight">Welcome back, Galen</h1>
-          <p className="text-sm text-[rgb(var(--fg-muted))]">
+        <header>
+          <div className="flex items-center gap-1.5 text-tertiary text-xs mb-2">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Command Center</span>
+          </div>
+          <h1 className="text-[32px] font-semibold tracking-tight text-primary">
+            Welcome back, Galen
+          </h1>
+          <p className="text-secondary text-sm mt-1">
             This week's strategy is ready. Review before I start posting.
           </p>
         </header>
 
-        {/* Stats Row */}
+        {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
-          {[
-            { 
-              label: 'Platforms Connected', 
-              value: readyPlatforms, 
-              sublabel: `${readyPlatforms}/${totalPlatforms} Ready`,
-              icon: Settings 
-            },
-            { 
-              label: 'Thought Leaders', 
-              value: thoughtLeaders?.length || 0, 
-              sublabel: 'Tracking',
-              icon: Users 
-            },
-            { 
-              label: 'Competitors', 
-              value: competitors?.length || 0, 
-              sublabel: 'Monitoring',
-              icon: Building2 
-            },
-            { 
-              label: 'Posts Planned', 
-              value: postsThisWeek, 
-              sublabel: 'This Week',
-              icon: FileText 
-            },
-          ].map((stat) => (
-            <div key={stat.label} className="glass-card p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div className="h-9 w-9 rounded-xl bg-[rgb(var(--surface-inset))] flex items-center justify-center">
-                  <stat.icon className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
-                </div>
-                <span className="text-[10px] text-[rgb(var(--fg-subtle))]">{stat.sublabel}</span>
-              </div>
-              <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
-              <p className="text-xs text-[rgb(var(--fg-muted))] mt-1">{stat.label}</p>
-            </div>
-          ))}
+          <StatCard 
+            icon={Settings}
+            value={readyPlatforms}
+            label="Platforms Connected"
+            badge={`${readyPlatforms}/${totalPlatforms} Ready`}
+          />
+          <StatCard 
+            icon={Users}
+            value={thoughtLeaders?.length || 0}
+            label="Thought Leaders"
+            badge="Tracking"
+          />
+          <StatCard 
+            icon={Building2}
+            value={competitors?.length || 0}
+            label="Competitors"
+            badge="Monitoring"
+          />
+          <StatCard 
+            icon={FileText}
+            value={postsThisWeek}
+            label="Posts Planned"
+            badge="This Week"
+          />
         </div>
 
-        {/* Main Content Grid */}
+        {/* Main Grid */}
         <div className="grid grid-cols-3 gap-5">
           
-          {/* This Week's Content - Takes 2 columns */}
-          <div className="col-span-2 glass-card">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--border-subtle))]">
-              <h2 className="text-sm font-semibold">This Week's Content</h2>
-              <Link href="/calendar" className="text-xs text-[rgb(var(--fg-muted))] hover:text-[rgb(var(--fg))] flex items-center gap-1">
-                Full Calendar <ArrowRight className="h-3 w-3" />
+          {/* This Week's Content */}
+          <div className="col-span-2 glass-panel">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--glass-border-subtle))]">
+              <h2 className="text-sm font-semibold text-primary">This Week's Content</h2>
+              <Link 
+                href="/calendar" 
+                className="text-xs text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
+              >
+                Full Calendar <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            <div className="p-4 space-y-1">
-              {dayLabels.slice(0, 5).map((day, index) => {
-                const posts = postsByDay[index] || []
-                const post = posts[0]
-                
-                return (
-                  <div 
-                    key={day} 
-                    className="flex items-center gap-4 px-3 py-3 rounded-xl hover:bg-[rgb(var(--surface-inset))] transition-colors"
-                  >
-                    <span className="text-xs text-[rgb(var(--fg-subtle))] w-8">{day}</span>
-                    
-                    {post ? (
-                      <>
-                        <div className="h-8 w-8 rounded-lg bg-[rgb(var(--surface-inset))] flex items-center justify-center">
-                          {contentTypeIcons[post.metadata?.type] || <FileText className="h-4 w-4 text-[rgb(var(--fg-muted))]" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm truncate">{post.title || post.content?.slice(0, 50)}</p>
-                          <p className="text-[10px] text-[rgb(var(--fg-subtle))] capitalize">{post.metadata?.type || 'Post'}</p>
-                        </div>
-                        <span className={`text-[10px] px-2.5 py-1 rounded-full ${
-                          post.status === 'scheduled' 
-                            ? 'bg-[rgb(var(--fg))]/10 text-[rgb(var(--fg-muted))]' 
-                            : post.status === 'draft'
-                            ? 'bg-[rgb(var(--fg))]/5 text-[rgb(var(--fg-subtle))]'
-                            : 'bg-[rgb(var(--fg))]/5 text-[rgb(var(--fg-subtle))]'
-                        }`}>
-                          {post.status}
-                        </span>
-                      </>
-                    ) : (
-                      <p className="text-xs text-[rgb(var(--fg-subtle))]">No content scheduled</p>
-                    )}
+            <div className="p-3">
+              {weekContent.map((item, i) => (
+                <div 
+                  key={i}
+                  className="flex items-center gap-4 px-4 py-3.5 rounded-2xl glass-inset-hover"
+                >
+                  <span className="text-xs text-tertiary w-7">{item.day}</span>
+                  <div className="w-9 h-9 rounded-xl glass-inset flex items-center justify-center">
+                    <item.icon className="w-4 h-4 text-secondary" />
                   </div>
-                )
-              })}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-primary truncate">{item.title}</div>
+                    <div className="text-[10px] text-tertiary">{item.type}</div>
+                  </div>
+                  <span className={`
+                    text-[10px] px-3 py-1 rounded-full
+                    ${item.status === 'ready' 
+                      ? 'bg-[rgb(var(--fg))]/10 text-secondary' 
+                      : 'bg-[rgb(var(--fg))]/5 text-tertiary'
+                    }
+                  `}>
+                    {item.status}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Platforms */}
-          <div className="glass-card">
-            <div className="flex items-center gap-2 px-6 py-4 border-b border-[rgb(var(--border-subtle))]">
-              <Settings className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
-              <h2 className="text-sm font-semibold">Platforms</h2>
+          <div className="glass-panel">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-[rgb(var(--glass-border-subtle))]">
+              <Settings className="w-4 h-4 text-secondary" />
+              <h2 className="text-sm font-semibold text-primary">Platforms</h2>
             </div>
-            <div className="p-4 space-y-1">
+            <div className="p-3">
               {platforms?.map((platform) => (
                 <div 
-                  key={platform.id} 
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[rgb(var(--surface-inset))] transition-colors"
+                  key={platform.id}
+                  className="flex items-center gap-3 px-4 py-3 rounded-2xl glass-inset-hover"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-[rgb(var(--surface-inset))] flex items-center justify-center">
-                    {platformIcons[platform.name] || <Settings className="h-4 w-4 text-[rgb(var(--fg-muted))]" />}
+                  <div className="w-9 h-9 rounded-xl glass-inset flex items-center justify-center">
+                    {platformIcons[platform.name] || <Settings className="w-4 h-4 text-secondary" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm">{platform.name}</p>
-                    <p className="text-[10px] text-[rgb(var(--fg-subtle))]">
+                    <div className="text-sm text-primary">{platform.name}</div>
+                    <div className="text-[10px] text-tertiary">
                       {platform.handle || (platform.api_enabled ? 'via Ayrshare' : 'Setup needed')}
-                    </p>
+                    </div>
                   </div>
                   {platform.api_enabled ? (
-                    <CheckCircle className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
+                    <CheckCircle className="w-4 h-4 text-secondary" />
                   ) : (
-                    <Circle className="h-4 w-4 text-[rgb(var(--fg-subtle))]" />
+                    <Circle className="w-4 h-4 text-tertiary" />
                   )}
                 </div>
               ))}
@@ -204,44 +171,87 @@ export default async function Dashboard() {
         </div>
 
         {/* Research Insights */}
-        <div className="glass-card">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--border-subtle))]">
-            <h2 className="text-sm font-semibold">Research Insights</h2>
-            <Link href="/research" className="text-xs text-[rgb(var(--fg-muted))] hover:text-[rgb(var(--fg))] flex items-center gap-1">
-              All Research <ArrowRight className="h-3 w-3" />
+        <div className="glass-panel">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--glass-border-subtle))]">
+            <h2 className="text-sm font-semibold text-primary">Research Insights</h2>
+            <Link 
+              href="/research" 
+              className="text-xs text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
+            >
+              All Research <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
-                  <span className="text-xs text-[rgb(var(--fg-muted))]">Thought Leaders</span>
-                </div>
-                <p className="text-xl font-semibold">{thoughtLeaders?.length || 0}</p>
-                <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Tracked for content inspiration</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
-                  <span className="text-xs text-[rgb(var(--fg-muted))]">Competitors</span>
-                </div>
-                <p className="text-xl font-semibold">{competitors?.length || 0}</p>
-                <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Monitored for positioning</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
-                  <span className="text-xs text-[rgb(var(--fg-muted))]">Patterns</span>
-                </div>
-                <p className="text-xl font-semibold">13</p>
-                <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Content patterns learned</p>
-              </div>
-            </div>
+          <div className="p-6 grid grid-cols-3 gap-8">
+            <InsightCard 
+              icon={Users}
+              value={thoughtLeaders?.length || 0}
+              label="Thought Leaders"
+              sublabel="Tracked for content inspiration"
+            />
+            <InsightCard 
+              icon={Building2}
+              value={competitors?.length || 0}
+              label="Competitors"
+              sublabel="Monitored for positioning"
+            />
+            <InsightCard 
+              icon={Sparkles}
+              value={13}
+              label="Patterns"
+              sublabel="Content patterns learned"
+            />
           </div>
         </div>
 
       </div>
+    </div>
+  )
+}
+
+function StatCard({ 
+  icon: Icon, 
+  value, 
+  label, 
+  badge 
+}: { 
+  icon: any
+  value: number
+  label: string
+  badge: string
+}) {
+  return (
+    <div className="glass-panel p-5">
+      <div className="flex items-start justify-between mb-5">
+        <div className="w-10 h-10 rounded-2xl glass-inset flex items-center justify-center">
+          <Icon className="w-5 h-5 text-secondary" />
+        </div>
+        <span className="text-[10px] text-tertiary">{badge}</span>
+      </div>
+      <div className="text-3xl font-semibold text-primary tracking-tight">{value}</div>
+      <div className="text-xs text-secondary mt-1">{label}</div>
+    </div>
+  )
+}
+
+function InsightCard({
+  icon: Icon,
+  value,
+  label,
+  sublabel
+}: {
+  icon: any
+  value: number
+  label: string
+  sublabel: string
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4 text-secondary" />
+        <span className="text-xs text-secondary">{label}</span>
+      </div>
+      <div className="text-2xl font-semibold text-primary">{value}</div>
+      <div className="text-[10px] text-tertiary">{sublabel}</div>
     </div>
   )
 }
