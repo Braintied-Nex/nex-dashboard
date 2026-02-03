@@ -1,25 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import { 
-  FileText, 
-  Target,
+  Sparkles,
+  Settings,
+  Users,
+  Building2,
+  FileText,
   Twitter,
   Linkedin,
-  Github,
   MessageSquare,
   BookOpen,
   ArrowRight,
-  Sparkles,
-  Users,
-  Building2,
-  Clock,
-  Calendar,
-  TrendingUp,
-  Lightbulb,
-  MessageCircle,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus
+  CheckCircle,
+  Circle
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -27,293 +19,227 @@ const platformIcons: Record<string, React.ReactNode> = {
   'X/Twitter': <Twitter className="h-4 w-4" />,
   'LinkedIn': <Linkedin className="h-4 w-4" />,
   'Reddit': <MessageSquare className="h-4 w-4" />,
-  'GitHub': <Github className="h-4 w-4" />,
   'Substack': <BookOpen className="h-4 w-4" />,
 }
+
+const contentTypeIcons: Record<string, React.ReactNode> = {
+  'thread': <Twitter className="h-4 w-4" />,
+  'carousel': <Linkedin className="h-4 w-4" />,
+  'ama': <MessageSquare className="h-4 w-4" />,
+  'demo': <Twitter className="h-4 w-4" />,
+  'case_study': <Linkedin className="h-4 w-4" />,
+  'post': <FileText className="h-4 w-4" />,
+}
+
+const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export default async function Dashboard() {
   const supabase = await createClient()
   
   const [
     { data: platforms },
-    { data: allPosts },
     { data: scheduledPosts },
     { data: thoughtLeaders },
     { data: competitors },
-    { data: pendingEngagements },
-    { data: activeIdeas },
-    { data: risingTrends }
   ] = await Promise.all([
     supabase.from('nex_platforms').select('*'),
-    supabase.from('nex_posts').select('*'),
-    supabase.from('nex_posts').select('*, platform:nex_platforms(*), theme:nex_themes(*)').eq('status', 'scheduled').order('scheduled_for', { ascending: true }).limit(5),
+    supabase.from('nex_posts').select('*, platform:nex_platforms(*)').order('scheduled_for', { ascending: true }).limit(10),
     supabase.from('nex_thought_leaders').select('*'),
     supabase.from('nex_competitors').select('*'),
-    supabase.from('nex_engagement_queue').select('*').eq('status', 'pending').order('priority', { ascending: false }).limit(5),
-    supabase.from('nex_content_ideas').select('*').not('status', 'in', '("completed","archived")').order('potential_score', { ascending: false }).limit(5),
-    supabase.from('nex_trends').select('*').eq('status', 'watching').order('relevance_score', { ascending: false }).limit(5)
   ])
 
   const readyPlatforms = platforms?.filter(p => p.api_enabled).length || 0
-  const scheduledCount = allPosts?.filter(p => p.status === 'scheduled').length || 0
-  const pendingCount = pendingEngagements?.length || 0
-  const urgentCount = pendingEngagements?.filter(e => e.priority === 'urgent' || e.priority === 'high').length || 0
+  const totalPlatforms = platforms?.length || 0
+  const postsThisWeek = scheduledPosts?.filter(p => p.status === 'scheduled' || p.status === 'draft').length || 0
 
-  const momentumIcon = (momentum: string) => {
-    switch (momentum) {
-      case 'rising': return <ArrowUpRight className="h-4 w-4 text-[rgb(var(--success))]" />
-      case 'falling': return <ArrowDownRight className="h-4 w-4 text-[rgb(var(--error))]" />
-      default: return <Minus className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
+  // Group posts by day
+  const postsByDay: Record<number, typeof scheduledPosts> = {}
+  scheduledPosts?.forEach(post => {
+    if (post.scheduled_for) {
+      const day = new Date(post.scheduled_for).getDay()
+      const adjustedDay = day === 0 ? 6 : day - 1 // Convert to Mon=0
+      if (!postsByDay[adjustedDay]) postsByDay[adjustedDay] = []
+      postsByDay[adjustedDay]?.push(post)
     }
-  }
+  })
 
   return (
-    <div className="min-h-screen p-10 animate-fade-in">
-      <div className="max-w-6xl mx-auto space-y-10">
+    <div className="min-h-screen p-8 animate-fade-in">
+      <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header */}
-        <header className="space-y-2">
-          <p className="text-sm font-medium text-[rgb(var(--accent))] flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
+        <header className="space-y-1">
+          <p className="text-xs font-medium text-[rgb(var(--fg-muted))] flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3" />
             Command Center
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight">Welcome back, Galen</h1>
-          <p className="text-lg text-[rgb(var(--fg-muted))]">
-            {pendingCount > 0 
-              ? `${pendingCount} engagement${pendingCount > 1 ? 's' : ''} waiting${urgentCount > 0 ? ` · ${urgentCount} urgent` : ''}`
-              : scheduledCount > 0 
-                ? `${scheduledCount} posts scheduled`
-                : 'Ready to build your presence'}
+          <h1 className="text-3xl font-semibold tracking-tight">Welcome back, Galen</h1>
+          <p className="text-sm text-[rgb(var(--fg-muted))]">
+            This week's strategy is ready. Review before I start posting.
           </p>
         </header>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-5 gap-4">
+        {/* Stats Row */}
+        <div className="grid grid-cols-4 gap-4">
           {[
-            { label: 'Platforms', value: readyPlatforms, icon: Target, color: 'accent' },
-            { label: 'Responses', value: pendingCount, icon: MessageCircle, color: urgentCount > 0 ? 'warning' : 'accent' },
-            { label: 'Ideas', value: activeIdeas?.length || 0, icon: Lightbulb, color: 'accent' },
-            { label: 'Scheduled', value: scheduledCount, icon: FileText, color: 'accent' },
-            { label: 'Trends', value: risingTrends?.length || 0, icon: TrendingUp, color: 'accent' },
+            { 
+              label: 'Platforms Connected', 
+              value: readyPlatforms, 
+              sublabel: `${readyPlatforms}/${totalPlatforms} Ready`,
+              icon: Settings 
+            },
+            { 
+              label: 'Thought Leaders', 
+              value: thoughtLeaders?.length || 0, 
+              sublabel: 'Tracking',
+              icon: Users 
+            },
+            { 
+              label: 'Competitors', 
+              value: competitors?.length || 0, 
+              sublabel: 'Monitoring',
+              icon: Building2 
+            },
+            { 
+              label: 'Posts Planned', 
+              value: postsThisWeek, 
+              sublabel: 'This Week',
+              icon: FileText 
+            },
           ].map((stat) => (
-            <Card key={stat.label} variant="glass">
-              <CardContent className="p-6">
-                <div className={`h-10 w-10 rounded-2xl bg-[rgb(var(--${stat.color}))]/10 flex items-center justify-center mb-4`}>
-                  <stat.icon className={`h-5 w-5 text-[rgb(var(--${stat.color}))]`} />
+            <div key={stat.label} className="glass-card p-5">
+              <div className="flex items-start justify-between mb-4">
+                <div className="h-9 w-9 rounded-xl bg-[rgb(var(--surface-inset))] flex items-center justify-center">
+                  <stat.icon className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
                 </div>
-                <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
-                <p className="text-sm text-[rgb(var(--fg-muted))] mt-1">{stat.label}</p>
-              </CardContent>
-            </Card>
+                <span className="text-[10px] text-[rgb(var(--fg-subtle))]">{stat.sublabel}</span>
+              </div>
+              <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
+              <p className="text-xs text-[rgb(var(--fg-muted))] mt-1">{stat.label}</p>
+            </div>
           ))}
         </div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-3 gap-6">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-3 gap-5">
           
-          {/* Engagement Queue */}
-          <Card className="col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-[rgb(var(--accent))]/10 flex items-center justify-center">
-                  <MessageCircle className="h-4 w-4 text-[rgb(var(--accent))]" />
-                </div>
-                <CardTitle>Engagement Queue</CardTitle>
-                {urgentCount > 0 && (
-                  <Badge variant="warning">{urgentCount} urgent</Badge>
-                )}
-              </div>
-              <Link href="/engagement" className="text-sm text-[rgb(var(--accent))] hover:underline flex items-center gap-1">
-                View all <ArrowRight className="h-3 w-3" />
-              </Link>
-            </CardHeader>
-            <div className="divide-y divide-[rgb(var(--border-subtle))]">
-              {pendingEngagements && pendingEngagements.length > 0 ? (
-                pendingEngagements.slice(0, 4).map((item: any) => (
-                  <div key={item.id} className="px-8 py-5 hover:bg-[rgb(var(--surface))]/50 transition-colors">
-                    <div className="flex items-start gap-4">
-                      <div className="h-10 w-10 rounded-full bg-[rgb(var(--surface-raised))] flex items-center justify-center flex-shrink-0">
-                        {platformIcons[item.platform] || <MessageCircle className="h-4 w-4" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className="font-medium text-sm">{item.author_name || item.author_handle}</span>
-                          <Badge variant={item.priority === 'urgent' ? 'error' : item.priority === 'high' ? 'warning' : 'secondary'}>
-                            {item.priority}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-[rgb(var(--fg-muted))] line-clamp-2">{item.content}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="px-8 py-12 text-center text-[rgb(var(--fg-muted))]">
-                  <MessageCircle className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p>No pending engagements</p>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Upcoming Content */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-[rgb(var(--accent))]/10 flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-[rgb(var(--accent))]" />
-                </div>
-                <CardTitle>Upcoming</CardTitle>
-              </div>
-              <Link href="/calendar" className="text-sm text-[rgb(var(--accent))] hover:underline flex items-center gap-1">
-                Calendar <ArrowRight className="h-3 w-3" />
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {scheduledPosts && scheduledPosts.length > 0 ? (
-                scheduledPosts.slice(0, 4).map((post: any) => (
-                  <div key={post.id} className="p-4 rounded-2xl bg-[rgb(var(--surface))]/50 hover:bg-[rgb(var(--surface))] transition-colors">
-                    <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-xl bg-[rgb(var(--surface-raised))] flex items-center justify-center flex-shrink-0">
-                        {post.platform ? platformIcons[post.platform.name] : <FileText className="h-4 w-4" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm line-clamp-2">{post.content}</p>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-[rgb(var(--fg-muted))]">
-                          <Clock className="h-3 w-3" />
-                          {new Date(post.scheduled_for).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-8 text-center text-[rgb(var(--fg-muted))]">
-                  <Calendar className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p>No scheduled posts</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Bottom Row */}
-        <div className="grid grid-cols-2 gap-6">
-          
-          {/* Trends */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-[rgb(var(--accent))]/10 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-[rgb(var(--accent))]" />
-                </div>
-                <CardTitle>Trending</CardTitle>
-              </div>
-              <Link href="/research" className="text-sm text-[rgb(var(--accent))] hover:underline flex items-center gap-1">
-                Research <ArrowRight className="h-3 w-3" />
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {risingTrends && risingTrends.length > 0 ? (
-                risingTrends.map((trend: any) => (
-                  <div key={trend.id} className="flex items-center justify-between p-4 rounded-2xl bg-[rgb(var(--surface))]/50 hover:bg-[rgb(var(--surface))] transition-colors">
-                    <div className="flex items-center gap-3">
-                      {momentumIcon(trend.momentum)}
-                      <span className="text-sm font-medium">{trend.topic}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{trend.source}</Badge>
-                      <span className="text-sm text-[rgb(var(--accent))] font-medium">{trend.relevance_score}%</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-8 text-center text-[rgb(var(--fg-muted))]">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p>No trends tracked</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Ideas */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-[rgb(var(--accent))]/10 flex items-center justify-center">
-                  <Lightbulb className="h-4 w-4 text-[rgb(var(--accent))]" />
-                </div>
-                <CardTitle>Top Ideas</CardTitle>
-              </div>
-              <Link href="/ideas" className="text-sm text-[rgb(var(--accent))] hover:underline flex items-center gap-1">
-                All ideas <ArrowRight className="h-3 w-3" />
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {activeIdeas && activeIdeas.length > 0 ? (
-                activeIdeas.map((idea: any) => (
-                  <div key={idea.id} className="flex items-center justify-between p-4 rounded-2xl bg-[rgb(var(--surface))]/50 hover:bg-[rgb(var(--surface))] transition-colors">
-                    <div className="flex-1 min-w-0 mr-4">
-                      <p className="text-sm font-medium truncate">{idea.title || idea.description.slice(0, 50)}</p>
-                      <p className="text-xs text-[rgb(var(--fg-muted))] capitalize mt-1">{idea.status.replace('_', ' ')}</p>
-                    </div>
-                    <span className="text-lg font-semibold text-[rgb(var(--accent))]">{idea.potential_score}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="py-8 text-center text-[rgb(var(--fg-muted))]">
-                  <Lightbulb className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p>No ideas yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Research Summary */}
-        <Card variant="glass">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-[rgb(var(--accent))]/10 flex items-center justify-center">
-                    <Users className="h-5 w-5 text-[rgb(var(--accent))]" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{thoughtLeaders?.length || 0}</p>
-                    <p className="text-sm text-[rgb(var(--fg-muted))]">Thought Leaders</p>
-                  </div>
-                </div>
-                <div className="w-px h-12 bg-[rgb(var(--border))]" />
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-[rgb(var(--accent))]/10 flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-[rgb(var(--accent))]" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{competitors?.length || 0}</p>
-                    <p className="text-sm text-[rgb(var(--fg-muted))]">Competitors</p>
-                  </div>
-                </div>
-                <div className="w-px h-12 bg-[rgb(var(--border))]" />
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-[rgb(var(--accent))]/10 flex items-center justify-center">
-                    <Target className="h-5 w-5 text-[rgb(var(--accent))]" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{platforms?.length || 0}</p>
-                    <p className="text-sm text-[rgb(var(--fg-muted))]">Platforms</p>
-                  </div>
-                </div>
-              </div>
-              <Link 
-                href="/research" 
-                className="px-6 py-3 rounded-2xl bg-[rgb(var(--accent))] text-white font-medium text-sm shadow-lg shadow-[rgb(var(--accent))]/20 hover:shadow-xl transition-all"
-              >
-                Research Hub
+          {/* This Week's Content - Takes 2 columns */}
+          <div className="col-span-2 glass-card">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--border-subtle))]">
+              <h2 className="text-sm font-semibold">This Week's Content</h2>
+              <Link href="/calendar" className="text-xs text-[rgb(var(--fg-muted))] hover:text-[rgb(var(--fg))] flex items-center gap-1">
+                Full Calendar <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-          </CardContent>
-        </Card>
+            <div className="p-4 space-y-1">
+              {dayLabels.slice(0, 5).map((day, index) => {
+                const posts = postsByDay[index] || []
+                const post = posts[0]
+                
+                return (
+                  <div 
+                    key={day} 
+                    className="flex items-center gap-4 px-3 py-3 rounded-xl hover:bg-[rgb(var(--surface-inset))] transition-colors"
+                  >
+                    <span className="text-xs text-[rgb(var(--fg-subtle))] w-8">{day}</span>
+                    
+                    {post ? (
+                      <>
+                        <div className="h-8 w-8 rounded-lg bg-[rgb(var(--surface-inset))] flex items-center justify-center">
+                          {contentTypeIcons[post.metadata?.type] || <FileText className="h-4 w-4 text-[rgb(var(--fg-muted))]" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">{post.title || post.content?.slice(0, 50)}</p>
+                          <p className="text-[10px] text-[rgb(var(--fg-subtle))] capitalize">{post.metadata?.type || 'Post'}</p>
+                        </div>
+                        <span className={`text-[10px] px-2.5 py-1 rounded-full ${
+                          post.status === 'scheduled' 
+                            ? 'bg-[rgb(var(--fg))]/10 text-[rgb(var(--fg-muted))]' 
+                            : post.status === 'draft'
+                            ? 'bg-[rgb(var(--fg))]/5 text-[rgb(var(--fg-subtle))]'
+                            : 'bg-[rgb(var(--fg))]/5 text-[rgb(var(--fg-subtle))]'
+                        }`}>
+                          {post.status}
+                        </span>
+                      </>
+                    ) : (
+                      <p className="text-xs text-[rgb(var(--fg-subtle))]">No content scheduled</p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Platforms */}
+          <div className="glass-card">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-[rgb(var(--border-subtle))]">
+              <Settings className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
+              <h2 className="text-sm font-semibold">Platforms</h2>
+            </div>
+            <div className="p-4 space-y-1">
+              {platforms?.map((platform) => (
+                <div 
+                  key={platform.id} 
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[rgb(var(--surface-inset))] transition-colors"
+                >
+                  <div className="h-8 w-8 rounded-lg bg-[rgb(var(--surface-inset))] flex items-center justify-center">
+                    {platformIcons[platform.name] || <Settings className="h-4 w-4 text-[rgb(var(--fg-muted))]" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm">{platform.name}</p>
+                    <p className="text-[10px] text-[rgb(var(--fg-subtle))]">
+                      {platform.handle || (platform.api_enabled ? 'via Ayrshare' : 'Setup needed')}
+                    </p>
+                  </div>
+                  {platform.api_enabled ? (
+                    <CheckCircle className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-[rgb(var(--fg-subtle))]" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Research Insights */}
+        <div className="glass-card">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--border-subtle))]">
+            <h2 className="text-sm font-semibold">Research Insights</h2>
+            <Link href="/research" className="text-xs text-[rgb(var(--fg-muted))] hover:text-[rgb(var(--fg))] flex items-center gap-1">
+              All Research <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
+                  <span className="text-xs text-[rgb(var(--fg-muted))]">Thought Leaders</span>
+                </div>
+                <p className="text-xl font-semibold">{thoughtLeaders?.length || 0}</p>
+                <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Tracked for content inspiration</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
+                  <span className="text-xs text-[rgb(var(--fg-muted))]">Competitors</span>
+                </div>
+                <p className="text-xl font-semibold">{competitors?.length || 0}</p>
+                <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Monitored for positioning</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[rgb(var(--fg-muted))]" />
+                  <span className="text-xs text-[rgb(var(--fg-muted))]">Patterns</span>
+                </div>
+                <p className="text-xl font-semibold">13</p>
+                <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Content patterns learned</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>

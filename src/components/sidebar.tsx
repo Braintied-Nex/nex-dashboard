@@ -12,10 +12,7 @@ import {
   Sparkles,
   Moon,
   Sun,
-  Monitor,
-  Search,
-  Lightbulb,
-  MessageCircle
+  Search
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from './theme-provider'
@@ -24,42 +21,35 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Strategy', href: '/strategy', icon: Target },
   { name: 'Research', href: '/research', icon: Search },
-  { name: 'Ideas', href: '/ideas', icon: Lightbulb },
   { name: 'Posts', href: '/posts', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Engagement', href: '/engagement', icon: MessageCircle },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
 
-  const cycleTheme = () => {
-    const themes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system']
-    const currentIndex = themes.indexOf(theme)
-    const nextIndex = (currentIndex + 1) % themes.length
-    setTheme(themes[nextIndex])
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }
 
-  const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor
-
   return (
-    <div className="flex h-screen w-72 flex-col glass">
+    <div className="flex h-screen w-56 flex-col glass">
       {/* Logo */}
-      <div className="flex h-20 items-center gap-4 px-8">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[rgb(var(--accent))] to-[rgb(var(--accent))]/70 shadow-lg shadow-[rgb(var(--accent))]/20">
-          <Sparkles className="h-6 w-6 text-white" />
+      <div className="flex items-center gap-3 px-5 py-6">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgb(var(--fg))]/10">
+          <Sparkles className="h-4 w-4 text-[rgb(var(--fg))]" />
         </div>
         <div>
-          <span className="text-xl font-semibold tracking-tight">Nex</span>
-          <span className="text-xs text-[rgb(var(--fg-muted))] block tracking-wide">Command Center</span>
+          <span className="text-base font-semibold">Nex</span>
+          <span className="text-[10px] text-[rgb(var(--fg-muted))] block">Command Center</span>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-4 py-6">
+      <nav className="flex-1 space-y-0.5 px-3 py-2">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -67,45 +57,47 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium',
-                'transition-all duration-200 ease-out',
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium',
+                'transition-all duration-150',
                 isActive
-                  ? 'bg-[rgb(var(--surface-raised))] text-[rgb(var(--fg))] shadow-sm'
-                  : 'text-[rgb(var(--fg-muted))] hover:bg-[rgb(var(--surface))]/50 hover:text-[rgb(var(--fg))]'
+                  ? 'glass-inset text-[rgb(var(--fg))]'
+                  : 'text-[rgb(var(--fg-muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--surface-inset))]'
               )}
             >
-              <item.icon className={cn(
-                "h-5 w-5 transition-colors",
-                isActive && "text-[rgb(var(--accent))]"
-              )} />
+              <item.icon className="h-4 w-4" />
               {item.name}
+              {isActive && (
+                <div className="ml-auto h-1.5 w-1.5 rounded-full bg-[rgb(var(--fg))]" />
+              )}
             </Link>
           )
         })}
       </nav>
 
       {/* Footer */}
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-3">
         {/* Theme Toggle */}
         <button
-          onClick={cycleTheme}
+          onClick={toggleTheme}
           className={cn(
-            'flex items-center gap-3 w-full rounded-2xl px-4 py-3',
-            'text-sm text-[rgb(var(--fg-muted))]',
-            'hover:bg-[rgb(var(--surface))]/50 hover:text-[rgb(var(--fg))]',
-            'transition-all duration-200 ease-out'
+            'flex items-center gap-3 w-full rounded-xl px-3 py-2.5',
+            'text-[13px] text-[rgb(var(--fg-muted))]',
+            'hover:bg-[rgb(var(--surface-inset))] hover:text-[rgb(var(--fg))]',
+            'transition-all duration-150'
           )}
         >
-          <ThemeIcon className="h-5 w-5" />
-          <span className="capitalize">{theme}</span>
+          {resolvedTheme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          <span>{resolvedTheme === 'dark' ? 'Dark' : 'Light'} Mode</span>
         </button>
 
-        {/* Profile */}
-        <div className="flex items-center gap-4 px-4 py-2">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[rgb(var(--accent))] to-blue-600 shadow-lg shadow-[rgb(var(--accent))]/20" />
+        {/* Status */}
+        <div className="flex items-center gap-3 px-3 py-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[rgb(var(--fg))]/5 text-[rgb(var(--fg-muted))] text-xs font-bold">
+            N
+          </div>
           <div>
-            <p className="text-sm font-medium">Nex</p>
-            <p className="text-xs text-[rgb(var(--fg-muted))]">AI Co-founder</p>
+            <p className="text-[12px] font-medium text-[rgb(var(--fg))]">Active</p>
+            <p className="text-[10px] text-[rgb(var(--fg-subtle))]">Always-on intelligence</p>
           </div>
         </div>
       </div>
