@@ -13,7 +13,9 @@ import {
   Moon,
   Sun,
   Monitor,
-  Search
+  Search,
+  Lightbulb,
+  MessageCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from './theme-provider'
@@ -22,8 +24,10 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Strategy', href: '/strategy', icon: Target },
   { name: 'Research', href: '/research', icon: Search },
+  { name: 'Ideas', href: '/ideas', icon: Lightbulb },
   { name: 'Posts', href: '/posts', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Engagement', href: '/engagement', icon: MessageCircle },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
