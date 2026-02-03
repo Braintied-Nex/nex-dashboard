@@ -12,16 +12,18 @@ import {
   Zap,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  Search
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from './theme-provider'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Strategy', href: '/strategy', icon: Target },
+  { name: 'Research', href: '/research', icon: Search },
   { name: 'Posts', href: '/posts', icon: FileText },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Strategy', href: '/strategy', icon: Target },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
