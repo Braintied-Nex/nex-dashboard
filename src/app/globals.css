@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 /* ============================================
-   NEX — SPATIAL GLASS DESIGN
+   NEX — SPATIAL GLASS DESIGN SYSTEM
    Futuristic command center aesthetic
+   Cognitive load optimized
    ============================================ */
 
 :root {
-  /* Core */
+  /* Core colors */
   --black: 10 10 10;
   --white: 255 255 255;
 }
@@ -15,49 +16,77 @@
 :root, .dark, [data-theme="dark"] {
   color-scheme: dark;
   
+  /* Background & Foreground */
   --bg: var(--black);
   --fg: var(--white);
-  --fg-2: 200 200 200;
-  --fg-3: 120 120 120;
-  --fg-4: 80 80 80;
   
-  /* Glass - very transparent */
+  /* Text hierarchy - 4 levels for cognitive clarity */
+  --fg-1: 255 255 255;      /* Primary - headings, important */
+  --fg-2: 200 200 200;      /* Secondary - body text */
+  --fg-3: 130 130 130;      /* Tertiary - labels, hints */
+  --fg-4: 80 80 80;         /* Quaternary - disabled, very subtle */
+  
+  /* Glass - layered transparency */
   --glass: 40 40 40 / 0.4;
   --glass-hover: 50 50 50 / 0.5;
-  --glass-border: 255 255 255 / 0.07;
+  --glass-border: 255 255 255 / 0.06;
   --glass-inset: 255 255 255 / 0.04;
-  --glass-inset-hover: 255 255 255 / 0.07;
+  --glass-inset-hover: 255 255 255 / 0.08;
+  
+  /* Semantic */
+  --accent: 255 255 255;
+  --success: 74 222 128;
+  --warning: 251 191 36;
+  --error: 248 113 113;
 }
 
 /* Light */
 [data-theme="light"] {
   color-scheme: light;
   
-  --bg: 245 245 245;
+  --bg: 250 250 250;
   --fg: 20 20 20;
+  
+  --fg-1: 20 20 20;
   --fg-2: 60 60 60;
   --fg-3: 120 120 120;
-  --fg-4: 160 160 160;
+  --fg-4: 170 170 170;
   
-  --glass: 255 255 255 / 0.6;
-  --glass-hover: 255 255 255 / 0.75;
-  --glass-border: 0 0 0 / 0.06;
+  --glass: 255 255 255 / 0.7;
+  --glass-hover: 255 255 255 / 0.85;
+  --glass-border: 0 0 0 / 0.05;
   --glass-inset: 0 0 0 / 0.03;
-  --glass-inset-hover: 0 0 0 / 0.05;
+  --glass-inset-hover: 0 0 0 / 0.06;
+  
+  --accent: 20 20 20;
 }
 
-/* Base */
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
 html {
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: rgb(var(--bg));
   color: rgb(var(--fg));
-  overflow: hidden;
+  overflow-x: hidden;
+  min-height: 100vh;
 }
 
-/* Glass */
+/* Focus states */
+:focus-visible {
+  outline: 2px solid rgb(var(--fg) / 0.3);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   GLASS MORPHISM
+   ============================================ */
+
 .glass {
   background: rgb(var(--glass));
   backdrop-filter: blur(50px) saturate(180%);
@@ -76,6 +105,14 @@ body {
   border-radius: 20px;
 }
 
+.glass-card {
+  background: rgb(var(--glass));
+  backdrop-filter: blur(40px) saturate(150%);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+  border: 1px solid rgb(var(--glass-border));
+  border-radius: 16px;
+}
+
 .glass-inset {
   background: rgb(var(--glass-inset));
   border-radius: 12px;
@@ -86,33 +123,167 @@ body {
   background: rgb(var(--glass-inset-hover));
 }
 
-/* Text */
-.text-1 { color: rgb(var(--fg)); }
+.glass-elevated {
+  background: rgb(var(--glass));
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid rgb(var(--glass-border));
+  border-radius: 16px;
+  box-shadow: 
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* ============================================
+   TEXT HIERARCHY
+   ============================================ */
+
+.text-1 { color: rgb(var(--fg-1)); }
 .text-2 { color: rgb(var(--fg-2)); }
 .text-3 { color: rgb(var(--fg-3)); }
 .text-4 { color: rgb(var(--fg-4)); }
 
-/* Animations */
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(8px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(16px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
 .animate-in {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.35s ease-out;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar { 
+  width: 6px; 
+  height: 6px;
+}
+
+::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+
 ::-webkit-scrollbar-thumb { 
   background: rgb(var(--fg) / 0.1); 
   border-radius: 3px; 
 }
 
-/* Shader */
+::-webkit-scrollbar-thumb:hover { 
+  background: rgb(var(--fg) / 0.15); 
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+
+input, textarea, select {
+  background: rgb(var(--glass-inset));
+  border: 1px solid rgb(var(--glass-border));
+  border-radius: 12px;
+  color: rgb(var(--fg));
+  transition: all 0.15s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: rgb(var(--fg) / 0.2);
+  background: rgb(var(--glass-inset-hover));
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgb(var(--fg-4));
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================
+   SHADER BACKGROUND
+   ============================================ */
+
 #ambient-shader {
   position: fixed;
   inset: 0;
   z-index: -1;
+  pointer-events: none;
 }

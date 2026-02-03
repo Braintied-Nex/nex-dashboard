@@ -14,20 +14,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled}
         className={cn(
           'inline-flex items-center justify-center gap-2 font-medium',
-          'rounded-2xl transition-all duration-200 ease-out',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2',
+          'rounded-xl transition-all duration-150 ease-out',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--fg)/0.3)] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgb(var(--bg))]',
           'disabled:opacity-50 disabled:pointer-events-none',
           'active:scale-[0.98]',
           {
             // Variants
-            'bg-[rgb(var(--accent))] text-white shadow-lg shadow-[rgb(var(--accent))]/20 hover:shadow-xl hover:shadow-[rgb(var(--accent))]/30': variant === 'primary',
-            'bg-[rgb(var(--surface-raised))] text-[rgb(var(--fg))] hover:bg-[rgb(var(--border))]': variant === 'secondary',
-            'bg-transparent text-[rgb(var(--fg-muted))] hover:bg-[rgb(var(--surface))] hover:text-[rgb(var(--fg))]': variant === 'ghost',
-            'bg-[rgb(var(--error))]/10 text-[rgb(var(--error))] hover:bg-[rgb(var(--error))]/20': variant === 'danger',
+            'bg-[rgb(var(--fg))] text-[rgb(var(--bg))] hover:opacity-90': variant === 'primary',
+            'glass-inset text-1 hover:bg-[rgb(var(--glass-inset-hover))]': variant === 'secondary',
+            'bg-transparent text-3 hover:bg-[rgb(var(--glass-inset))] hover:text-1': variant === 'ghost',
+            'bg-red-500/15 text-red-400 hover:bg-red-500/25': variant === 'danger',
             // Sizes
-            'text-sm px-4 py-2': size === 'sm',
-            'text-sm px-6 py-3': size === 'md',
-            'text-base px-8 py-4': size === 'lg',
+            'text-xs px-3 py-1.5': size === 'sm',
+            'text-sm px-5 py-2.5': size === 'md',
+            'text-sm px-6 py-3': size === 'lg',
           },
           className
         )}

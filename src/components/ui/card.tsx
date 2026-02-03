@@ -1,14 +1,21 @@
 import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'glass' | 'elevated'
+}
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, variant = 'default', children, ...props }, ref) => {
+    const variants = {
+      default: 'glass-panel',
+      glass: 'glass-panel',
+      elevated: 'glass-panel shadow-xl',
+    }
     return (
       <div
         ref={ref}
-        className={cn('glass-card', className)}
+        className={cn(variants[variant], className)}
         {...props}
       >
         {children}
@@ -24,7 +31,7 @@ const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        'flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--border-subtle))]',
+        'flex items-center justify-between px-6 py-4 border-b border-[rgb(var(--glass-border))]',
         className
       )}
       {...props}
@@ -58,4 +65,19 @@ const CardContent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
 
 CardContent.displayName = 'CardContent'
 
-export { Card, CardHeader, CardTitle, CardContent }
+const CardFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        'flex items-center px-6 py-4 border-t border-[rgb(var(--glass-border))]',
+        className
+      )}
+      {...props}
+    />
+  )
+)
+
+CardFooter.displayName = 'CardFooter'
+
+export { Card, CardHeader, CardTitle, CardContent, CardFooter }

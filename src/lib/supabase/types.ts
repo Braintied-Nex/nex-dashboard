@@ -136,6 +136,8 @@ export interface Post {
   published_at: string | null
   external_id: string | null
   external_url: string | null
+  thread_id: string | null
+  thread_position: number | null
   metadata: Json
   created_at: string
   updated_at: string

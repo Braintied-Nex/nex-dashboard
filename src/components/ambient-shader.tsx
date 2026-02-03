@@ -138,7 +138,7 @@ const fragmentLight = `
 export function AmbientShader() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { resolvedTheme } = useTheme()
-  const frameRef = useRef<number>()
+  const frameRef = useRef<number | undefined>(undefined)
   
   useEffect(() => {
     const canvas = canvasRef.current
