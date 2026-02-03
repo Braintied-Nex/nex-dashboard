@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Post, Platform, Theme } from '@/lib/supabase/types'
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, Button, Badge, Input, Textarea, Select } from '@/components/ui'
+import { Card, CardHeader, CardTitle, CardContent, Button, Badge, Input, Textarea, Select } from '@/components/ui'
 import { 
   Plus, 
   Search,

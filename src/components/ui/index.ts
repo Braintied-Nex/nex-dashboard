@@ -1,6 +1,6 @@
 export { Button, type ButtonProps } from './button'
 export { Badge, type BadgeProps } from './badge'
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, type CardProps } from './card'
+export { Card, CardHeader, CardTitle, CardContent, type CardProps } from './card'
 export { Input, type InputProps } from './input'
 export { Textarea, type TextareaProps } from './textarea'
 export { Select, type SelectProps } from './select'
