@@ -1,361 +1,224 @@
-import { createClient } from '@/lib/supabase/server'
-import type { EngagementItem } from '@/lib/supabase/types'
-import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui'
-import { 
+import { createAdminClient } from '@/lib/supabase/admin'
+import {
   MessageCircle,
-  AtSign,
-  Reply,
-  Quote,
-  Mail,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  ThumbsUp,
-  HelpCircle,
-  Minus,
+  Heart,
+  Eye,
+  Repeat2,
   ExternalLink,
-  Zap,
-  Send,
-  X
+  ArrowUpRight,
+  TrendingUp,
+  Users,
 } from 'lucide-react'
 
-// Platform icons
-const PlatformIcon = ({ name, className = "h-4 w-4" }: { name: string; className?: string }) => {
-  const icons: Record<string, React.ReactNode> = {
-    'twitter': (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-      </svg>
-    ),
-    'linkedin': (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-      </svg>
-    ),
-    'reddit': (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0z"/>
-      </svg>
-    ),
-  }
-  return <>{icons[name.toLowerCase()] || <MessageCircle className={className} />}</>
-}
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function EngagementPage() {
-  const supabase = await createClient()
-  
-  const [
-    { data: pendingItems },
-    { data: allItems },
-  ] = await Promise.all([
-    supabase.from('nex_engagement_queue')
-      .select('*')
-      .eq('status', 'pending')
-      .order('priority', { ascending: false })
-      .order('discovered_at', { ascending: false }),
-    supabase.from('nex_engagement_queue')
-      .select('*')
-      .order('discovered_at', { ascending: false })
-      .limit(50)
-  ]) as [
-    { data: EngagementItem[] | null },
-    { data: EngagementItem[] | null }
-  ]
+  const sb = createAdminClient()
 
-  const stats = {
-    pending: allItems?.filter(i => i.status === 'pending').length || 0,
-    drafting: allItems?.filter(i => i.status === 'drafting').length || 0,
-    responded: allItems?.filter(i => i.status === 'responded').length || 0,
-    urgent: allItems?.filter(i => i.priority === 'urgent').length || 0,
-    high: allItems?.filter(i => i.priority === 'high').length || 0,
+  const { data: engagements } = await sb
+    .from('nex_x_engagements')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  const all = engagements || []
+
+  // Stats
+  const totalEngagements = all.length
+  const withMetrics = all.filter((e: any) => (e.impressions || 0) > 0)
+  const totalImpressions = all.reduce((s: number, e: any) => s + (e.impressions || 0), 0)
+  const totalLikes = all.reduce((s: number, e: any) => s + (e.likes || 0), 0)
+  const avgER = withMetrics.length > 0
+    ? withMetrics.reduce((s: number, e: any) => s + (e.engagement_rate || 0), 0) / withMetrics.length
+    : 0
+
+  // Unique authors engaged with
+  const uniqueAuthors = new Set(all.map((e: any) => e.trigger_author).filter(Boolean))
+
+  // Tone breakdown
+  const tones: Record<string, number> = {}
+  for (const e of all) {
+    const tone = (e as any).tone || 'unknown'
+    tones[tone] = (tones[tone] || 0) + 1
   }
 
-  const sourceIcon = (type: string) => {
-    switch (type) {
-      case 'mention': return <AtSign className="h-4 w-4" />
-      case 'comment': return <MessageCircle className="h-4 w-4" />
-      case 'reply': return <Reply className="h-4 w-4" />
-      case 'quote': return <Quote className="h-4 w-4" />
-      case 'dm': return <Mail className="h-4 w-4" />
-      default: return <MessageCircle className="h-4 w-4" />
-    }
+  // Type breakdown
+  const types: Record<string, number> = {}
+  for (const e of all) {
+    const t = (e as any).engagement_type || 'unknown'
+    types[t] = (types[t] || 0) + 1
   }
-
-  const sentimentIcon = (sentiment: string) => {
-    switch (sentiment) {
-      case 'positive': return <ThumbsUp className="h-3.5 w-3.5 text-green-400" />
-      case 'negative': return <AlertCircle className="h-3.5 w-3.5 text-red-400" />
-      case 'question': return <HelpCircle className="h-3.5 w-3.5 text-blue-400" />
-      default: return <Minus className="h-3.5 w-3.5 text-4" />
-    }
-  }
-
-  const priorityColors: Record<string, string> = {
-    urgent: 'bg-red-500/15 text-red-400',
-    high: 'bg-orange-500/15 text-orange-400',
-    normal: 'bg-blue-500/15 text-blue-400',
-    low: 'bg-[rgb(var(--glass-inset))] text-4',
-  }
-
-  const hasItems = (allItems?.length || 0) > 0
 
   return (
-    <div className="min-h-screen p-8 animate-in">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-center gap-2 text-3 mb-2">
-            <MessageCircle className="h-4 w-4" />
-            <span className="text-sm font-medium">Response Management</span>
-          </div>
-          <h1 className="text-[28px] font-semibold text-1 tracking-tight">Engagement</h1>
-          <p className="text-sm text-3 mt-1">
-            {stats.pending > 0 
-              ? `${stats.pending} item${stats.pending > 1 ? 's' : ''} need${stats.pending === 1 ? 's' : ''} attention`
-              : 'All caught up'
-            }
+    <div className="min-h-screen p-6 lg:p-8 animate-in">
+      <div className="max-w-6xl mx-auto space-y-6">
+
+        <header>
+          <h1 className="text-[28px] font-semibold tracking-tight text-1">Engagement</h1>
+          <p className="text-2 text-sm mt-1">
+            {totalEngagements} engagements with {uniqueAuthors.size} people
           </p>
         </header>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <StatCard 
-            icon={Clock} 
-            value={stats.pending} 
-            label="Pending" 
-            color="text-amber-400"
-          />
-          <StatCard 
-            icon={Zap} 
-            value={stats.drafting} 
-            label="Drafting" 
-            color="text-blue-400"
-          />
-          <StatCard 
-            icon={CheckCircle2} 
-            value={stats.responded} 
-            label="Responded" 
-            color="text-green-400"
-          />
-          <StatCard 
-            icon={AlertCircle} 
-            value={stats.urgent} 
-            label="Urgent" 
-            color={stats.urgent > 0 ? 'text-red-400' : 'text-4'}
-          />
-          <StatCard 
-            icon={Zap} 
-            value={stats.high} 
-            label="High Pri" 
-            color={stats.high > 0 ? 'text-orange-400' : 'text-4'}
-          />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <StatCard label="Engagements" value={totalEngagements.toString()} icon={MessageCircle} />
+          <StatCard label="People" value={uniqueAuthors.size.toString()} icon={Users} />
+          <StatCard label="Impressions" value={totalImpressions.toLocaleString()} icon={Eye} />
+          <StatCard label="Likes Earned" value={totalLikes.toString()} icon={Heart} />
+          <StatCard label="Avg ER" value={`${avgER.toFixed(2)}%`} icon={TrendingUp} />
         </div>
 
-        {!hasItems ? (
-          /* Empty State */
-          <Card>
-            <CardContent className="py-16 text-center">
-              <div className="w-16 h-16 rounded-2xl glass-inset flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="h-6 w-6 text-3" />
-              </div>
-              <h2 className="text-lg font-semibold mb-2">Engagement Queue Empty</h2>
-              <p className="text-sm text-3 max-w-md mx-auto mb-8">
-                When people mention, reply to, or comment on your content, I'll track them here 
-                and help you respond thoughtfully.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto">
-                {[
-                  { icon: AtSign, label: 'Mentions', color: 'text-blue-400' },
-                  { icon: MessageCircle, label: 'Comments', color: 'text-green-400' },
-                  { icon: Quote, label: 'Quotes', color: 'text-purple-400' },
-                  { icon: Mail, label: 'DMs', color: 'text-amber-400' },
-                ].map(({ icon: Icon, label, color }) => (
-                  <div key={label} className="p-4 glass-inset rounded-xl text-center">
-                    <Icon className={`h-5 w-5 ${color} mx-auto mb-2`} />
-                    <span className="text-xs text-2">{label}</span>
+        {/* Breakdowns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* By Type */}
+          <div className="glass-panel p-5">
+            <h3 className="text-[13px] font-medium text-2 mb-3">By Type</h3>
+            <div className="space-y-2">
+              {Object.entries(types).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
+                <div key={type} className="flex items-center justify-between">
+                  <span className="text-[12px] text-3 capitalize">{type}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-1.5 rounded-full bg-[rgb(var(--glass-inset))] overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-purple-400/60"
+                        style={{ width: `${(count / totalEngagements) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] text-2 tabular-nums w-6 text-right">{count}</span>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Pending Queue */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader className="flex-row items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Pending
-                  </CardTitle>
-                  {stats.pending > 0 && (
-                    <Badge className="bg-amber-500/15 text-amber-400">
-                      {stats.pending}
-                    </Badge>
-                  )}
-                </CardHeader>
-                <div className="divide-y divide-[rgb(var(--glass-border))]">
-                  {pendingItems && pendingItems.length > 0 ? (
-                    pendingItems.map((item) => (
-                      <div key={item.id} className="p-5 hover:bg-[rgb(var(--glass-inset))] transition-colors">
-                        <div className="flex items-start gap-4">
-                          {/* Avatar */}
-                          <div className="h-10 w-10 rounded-full glass-inset flex items-center justify-center flex-shrink-0">
-                            <PlatformIcon name={item.platform} />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            {/* Header */}
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm text-1">
-                                    {item.author_name || item.author_handle}
-                                  </span>
-                                  {item.author_handle && item.author_name && (
-                                    <span className="text-xs text-4">@{item.author_handle}</span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mt-1 text-4">
-                                  {sourceIcon(item.source_type)}
-                                  <span className="text-xs capitalize">{item.source_type}</span>
-                                  <span className="text-xs">·</span>
-                                  <span className="text-xs">{item.platform}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                {sentimentIcon(item.sentiment)}
-                                <Badge className={priorityColors[item.priority]}>
-                                  {item.priority}
-                                </Badge>
-                              </div>
-                            </div>
-                            
-                            {/* Content */}
-                            <p className="text-sm text-2 mb-3">{item.content}</p>
-                            
-                            {/* Context */}
-                            {item.context && (
-                              <div className="text-xs text-4 glass-inset p-2.5 rounded-lg mb-3">
-                                <span className="opacity-75">Replying to: </span>
-                                {item.context}
-                              </div>
-                            )}
-                            
-                            {/* Actions */}
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" className="gap-1.5">
-                                <Send className="h-3 w-3" />
-                                Draft Response
-                              </Button>
-                              <Button variant="ghost" size="sm" className="gap-1.5">
-                                <X className="h-3 w-3" />
-                                Skip
-                              </Button>
-                              {item.source_url && (
-                                <a 
-                                  href={item.source_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="ml-auto flex items-center gap-1 text-xs text-4 hover:text-2 transition-colors"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  View
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-8 text-center">
-                      <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-400 opacity-50" />
-                      <p className="text-sm text-3">All caught up! No pending responses.</p>
-                    </div>
-                  )}
                 </div>
-              </Card>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Response Rate */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Response Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-4">
-                    <p className="text-4xl font-bold text-1">
-                      {allItems && allItems.length > 0 
-                        ? Math.round((stats.responded / allItems.length) * 100)
-                        : 0}%
-                    </p>
-                    <p className="text-xs text-4 mt-1">
-                      {stats.responded} of {allItems?.length || 0} responded
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Responses */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Recent Responses
-                  </CardTitle>
-                </CardHeader>
-                <div className="divide-y divide-[rgb(var(--glass-border))] max-h-[300px] overflow-y-auto">
-                  {allItems?.filter(i => i.status === 'responded').slice(0, 5).map((item) => (
-                    <div key={item.id} className="px-6 py-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <PlatformIcon name={item.platform} className="h-3.5 w-3.5 text-3" />
-                        <span className="text-sm font-medium text-1 truncate">
-                          {item.author_name || item.author_handle}
-                        </span>
-                      </div>
-                      <p className="text-xs text-4 truncate">{item.content}</p>
-                    </div>
-                  )) || (
-                    <div className="px-6 py-4 text-center text-sm text-4">
-                      No responses yet
-                    </div>
-                  )}
-                </div>
-              </Card>
+              ))}
             </div>
           </div>
-        )}
+
+          {/* By Tone */}
+          <div className="glass-panel p-5">
+            <h3 className="text-[13px] font-medium text-2 mb-3">By Tone</h3>
+            <div className="space-y-2">
+              {Object.entries(tones).sort((a, b) => b[1] - a[1]).map(([tone, count]) => (
+                <div key={tone} className="flex items-center justify-between">
+                  <span className="text-[12px] text-3 capitalize">{tone}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-1.5 rounded-full bg-[rgb(var(--glass-inset))] overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-blue-400/60"
+                        style={{ width: `${(count / totalEngagements) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] text-2 tabular-nums w-6 text-right">{count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Engagement Table */}
+        <div className="glass-panel overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[rgb(var(--glass-border))]">
+                  <th className="text-left text-[10px] text-4 font-medium uppercase tracking-wider px-6 py-3">Our Reply</th>
+                  <th className="text-left text-[10px] text-4 font-medium uppercase tracking-wider px-3 py-3 w-28">To</th>
+                  <th className="text-center text-[10px] text-4 font-medium uppercase tracking-wider px-3 py-3 w-20">Tone</th>
+                  <th className="text-right text-[10px] text-4 font-medium uppercase tracking-wider px-3 py-3 w-20"><Eye className="w-3 h-3 inline" /></th>
+                  <th className="text-right text-[10px] text-4 font-medium uppercase tracking-wider px-3 py-3 w-16"><Heart className="w-3 h-3 inline" /></th>
+                  <th className="text-right text-[10px] text-4 font-medium uppercase tracking-wider px-3 py-3 w-20">ER</th>
+                  <th className="text-right text-[10px] text-4 font-medium uppercase tracking-wider px-6 py-3 w-32">When</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[rgb(var(--glass-border))]">
+                {all.map((eng: any) => (
+                  <tr key={eng.id} className="hover:bg-[rgb(var(--glass-inset))] transition-colors group">
+                    <td className="px-6 py-3">
+                      <a
+                        href={eng.our_tweet_id ? `https://x.com/sentigen_ai/status/${eng.our_tweet_id}` : '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <p className="text-[12px] text-2 line-clamp-2 max-w-sm group-hover:text-blue-400 transition-colors leading-relaxed">
+                          {eng.our_content || '—'}
+                        </p>
+                        {eng.our_tweet_id && (
+                          <ExternalLink className="w-3 h-3 text-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                        )}
+                      </a>
+                    </td>
+                    <td className="px-3 py-3">
+                      {eng.trigger_author ? (
+                        <a
+                          href={`https://x.com/${eng.trigger_author}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-3 hover:text-blue-400 transition-colors"
+                        >
+                          @{eng.trigger_author}
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-4">—</span>
+                      )}
+                    </td>
+                    <td className="text-center px-3 py-3">
+                      {eng.tone ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[rgb(var(--glass-inset))] text-3 capitalize">
+                          {eng.tone}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-4">—</span>
+                      )}
+                    </td>
+                    <td className="text-right px-3 py-3 text-[12px] text-2 tabular-nums">
+                      {(eng.impressions || 0) > 0 ? eng.impressions.toLocaleString() : '—'}
+                    </td>
+                    <td className="text-right px-3 py-3 text-[12px] tabular-nums">
+                      <span className={(eng.likes || 0) > 0 ? 'text-rose-400' : 'text-4'}>
+                        {(eng.likes || 0) > 0 ? eng.likes : '—'}
+                      </span>
+                    </td>
+                    <td className="text-right px-3 py-3">
+                      {(eng.engagement_rate || 0) > 0 ? (
+                        <span className={`text-[11px] font-medium tabular-nums ${
+                          eng.engagement_rate > 1 ? 'text-green-400' :
+                          eng.engagement_rate > 0.5 ? 'text-amber-400' : 'text-3'
+                        }`}>
+                          {eng.engagement_rate}%
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-4">—</span>
+                      )}
+                    </td>
+                    <td className="text-right px-6 py-3 text-[11px] text-4 tabular-nums">
+                      {formatTime(eng.created_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-function StatCard({ 
-  icon: Icon, 
-  value, 
-  label, 
-  color 
-}: { 
-  icon: any
-  value: number
-  label: string
-  color: string
-}) {
+function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: any }) {
   return (
     <div className="glass-panel p-4">
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl glass-inset flex items-center justify-center">
-          <Icon className={`w-4 h-4 ${color}`} />
-        </div>
-        <div>
-          <p className="text-xl font-bold text-1">{value}</p>
-          <p className="text-[10px] text-4 uppercase tracking-wide">{label}</p>
-        </div>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-3.5 h-3.5 text-3" />
+        <span className="text-[10px] text-4 uppercase tracking-wider">{label}</span>
       </div>
+      <div className="text-[20px] font-semibold text-1 tracking-tight tabular-nums">{value}</div>
     </div>
   )
+}
+
+function formatTime(dateStr: string) {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en', { month: 'short', day: 'numeric' }) + ' ' +
+    d.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })
 }

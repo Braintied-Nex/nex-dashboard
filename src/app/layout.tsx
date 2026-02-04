@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning style={{ background: '#0a0a0a' }}>
       <body className={`${inter.variable} font-sans`}>
         <ThemeProvider defaultTheme="dark">
           <AmbientShader />

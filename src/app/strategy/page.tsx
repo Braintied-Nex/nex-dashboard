@@ -1,311 +1,186 @@
-import { createClient } from '@/lib/supabase/server'
-import type { Platform } from '@/lib/supabase/types'
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
-import { 
-  Twitter, 
-  Linkedin, 
-  Github, 
-  Mail,
-  Target,
-  Users,
-  Clock,
-  FileText,
-  CheckCircle2,
-  AlertCircle,
-  Zap,
-  MessageSquare
-} from 'lucide-react'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { Target, Users, Calendar, PieChart, MessageSquare, Sparkles } from 'lucide-react'
 
-const platformIcons: Record<string, React.ReactNode> = {
-  twitter: <Twitter className="h-6 w-6" />,
-  linkedin: <Linkedin className="h-6 w-6" />,
-  github: <Github className="h-6 w-6" />,
-  mail: <Mail className="h-6 w-6" />,
-  'message-square': <MessageSquare className="h-6 w-6" />,
-}
-
-// Nex's actual strategy per platform
-const nexStrategy: Record<string, {
-  status: 'ready' | 'limited' | 'pending'
-  goal: string
-  audience: string
-  frequency: string
-  contentMix: { type: string; percentage: number }[]
-  voice: string
-  rules: string[]
-  accountInfo: string
-}> = {
-  'X/Twitter': {
-    status: 'ready',
-    goal: 'Build Sentigen awareness + establish presence in AI/founder space',
-    audience: 'Founders, indie hackers, AI enthusiasts, tech early adopters',
-    frequency: '2-3x daily (mix of original + engagement)',
-    contentMix: [
-      { type: 'Building in public', percentage: 35 },
-      { type: 'AI industry takes', percentage: 25 },
-      { type: 'Product updates', percentage: 20 },
-      { type: 'Engagement/replies', percentage: 20 },
-    ],
-    voice: 'Direct, knowledgeable, slightly provocative. Openly AI but not gimmicky.',
-    rules: [
-      'Short punchy tweets > long threads',
-      'Hot takes get 10x engagement vs announcements',
-      'Share real numbers (users, metrics, revenue)',
-      'Engage with AI community daily',
-      'Quote tweet interesting news with opinions'
-    ],
-    accountInfo: '@sentigen_ai — API ready, credits active'
-  },
-  'LinkedIn': {
-    status: 'ready',
-    goal: 'Position Galen as thought leader in AI-native business building',
-    audience: 'Executives, founders, VCs, enterprise decision makers',
-    frequency: '3-4x weekly',
-    contentMix: [
-      { type: 'Thought leadership', percentage: 40 },
-      { type: 'Company journey', percentage: 25 },
-      { type: 'Industry insights', percentage: 20 },
-      { type: 'Personal stories', percentage: 15 },
-    ],
-    voice: 'Professional but human. Galen\'s voice, my drafts.',
-    rules: [
-      'Galen posts as himself, I ghostwrite',
-      'More polished than Twitter',
-      'Focus on business value and ROI',
-      'Use carousels for frameworks',
-      'Personal stories humanize the founder'
-    ],
-    accountInfo: '@galenoakes via Ayrshare — Ready to post'
-  },
-  'Reddit': {
-    status: 'ready',
-    goal: 'Community engagement, feedback gathering, genuine help',
-    audience: 'r/startups, r/SaaS, r/artificial, r/Entrepreneur',
-    frequency: 'As relevant (quality > quantity)',
-    contentMix: [
-      { type: 'Helpful comments', percentage: 50 },
-      { type: 'Ask for feedback', percentage: 20 },
-      { type: 'Share insights', percentage: 20 },
-      { type: 'Announcements', percentage: 10 },
-    ],
-    voice: 'Helpful, genuine, never spammy. Community member first.',
-    rules: [
-      'NEVER self-promote without value',
-      'Build karma through genuine help',
-      'Great for finding pain points',
-      'Use for early user feedback',
-      'Respect subreddit culture'
-    ],
-    accountInfo: 'u/braintied — API ready'
-  },
-  'GitHub': {
-    status: 'ready',
-    goal: 'Build developer credibility, contribute to ecosystem',
-    audience: 'Developers, open source community',
-    frequency: 'Continuous contributions',
-    contentMix: [
-      { type: 'Code contributions', percentage: 40 },
-      { type: 'Documentation', percentage: 25 },
-      { type: 'Issue triage', percentage: 20 },
-      { type: 'Open source projects', percentage: 15 },
-    ],
-    voice: 'Technical, helpful, thorough.',
-    rules: [
-      'Quality code > quantity',
-      'Good commit messages and docs',
-      'Contribute to AI/LLM tooling',
-      'Open source useful utilities',
-      'Build real developer trust'
-    ],
-    accountInfo: '@Braintied-Nex — Active'
-  },
-  'Substack': {
-    status: 'pending',
-    goal: 'Deep-dive content, email list building, thought leadership',
-    audience: 'Engaged followers wanting deeper insights',
-    frequency: '1-2x weekly',
-    contentMix: [
-      { type: 'Technical deep-dives', percentage: 30 },
-      { type: 'Industry analysis', percentage: 30 },
-      { type: 'Building journey', percentage: 25 },
-      { type: 'Predictions/opinions', percentage: 15 },
-    ],
-    voice: 'Thoughtful, detailed, "Dispatches from an AI Co-founder"',
-    rules: [
-      'Long-form that can\'t fit in tweets',
-      'Repurpose into thread content',
-      'Build email list for launches',
-      'Unique AI perspective angle'
-    ],
-    accountInfo: 'Need to create account'
-  },
-}
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function StrategyPage() {
-  const supabase = await createClient()
-  
-  const { data: platforms } = await supabase
-    .from('nex_platforms')
-    .select('*')
-    .order('created_at') as { data: Platform[] | null }
+  const sb = createAdminClient()
 
-  const statusColors = {
-    ready: 'bg-green-500/15 text-green-400',
-    limited: 'bg-yellow-500/15 text-yellow-400',
-    pending: 'bg-red-500/15 text-red-400'
-  }
+  const [{ data: strategies }, { data: xStrategy }] = await Promise.all([
+    sb.from('nex_strategy').select('*').order('platform'),
+    sb.from('nex_x_strategy').select('*').single(),
+  ])
 
-  const StatusIcon = ({ status }: { status: string }) => {
-    if (status === 'ready') return <CheckCircle2 className="h-4 w-4 text-green-400" />
-    if (status === 'limited') return <AlertCircle className="h-4 w-4 text-yellow-400" />
-    return <Clock className="h-4 w-4 text-red-400" />
-  }
+  const allStrategies = strategies || []
 
   return (
-    <div className="p-8 max-w-7xl mx-auto animate-fade-in">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-[rgb(var(--accent))] mb-2">
-          <Zap className="h-4 w-4" />
-          <span className="text-sm font-medium">Strategic Playbook</span>
+    <div className="min-h-screen p-6 lg:p-8 animate-in">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header */}
+        <header>
+          <h1 className="text-[28px] font-semibold tracking-tight text-1">
+            Content Strategy
+          </h1>
+          <p className="text-2 text-sm mt-1">
+            Multi-platform content strategy and guidelines
+          </p>
+        </header>
+
+        {/* X Strategy Highlight */}
+        {xStrategy && (
+          <div className="glass-panel p-6 space-y-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <XIcon className="w-4 h-4 text-1" />
+                  <h2 className="text-lg font-semibold text-1">X / Twitter Strategy</h2>
+                </div>
+                <p className="text-xs text-3 max-w-2xl leading-relaxed">
+                  Primary platform for thought leadership and community engagement
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Voice */}
+              {xStrategy.voice && (
+                <div className="glass-inset p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-4">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span className="text-[10px] uppercase tracking-wider font-medium">Voice</span>
+                  </div>
+                  <p className="text-sm text-2 leading-relaxed">{xStrategy.voice}</p>
+                </div>
+              )}
+
+              {/* Themes */}
+              {xStrategy.themes && Array.isArray(xStrategy.themes) && xStrategy.themes.length > 0 && (
+                <div className="glass-inset p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-4">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span className="text-[10px] uppercase tracking-wider font-medium">Themes</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {xStrategy.themes.map((theme: any, i: number) => (
+                      <span key={i} className="text-xs px-2 py-1 rounded-full bg-blue-500/15 text-blue-400">
+                        {String(theme)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Reply Patterns */}
+              {xStrategy.reply_patterns && (
+                <div className="glass-inset p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-4">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span className="text-[10px] uppercase tracking-wider font-medium">Reply Patterns</span>
+                  </div>
+                  <p className="text-sm text-2 leading-relaxed">{xStrategy.reply_patterns}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Platform Strategies */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {allStrategies.map((strategy) => (
+            <StrategyCard key={strategy.id} strategy={strategy} />
+          ))}
         </div>
-        <h1 className="text-3xl font-bold mb-1">Content Strategy</h1>
-        <p className="text-[rgb(var(--muted-fg))]">
-          My approach for each platform — review before I start posting
-        </p>
-      </div>
-
-      {/* Strategy Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        {Object.entries(nexStrategy).map(([platform, strategy]) => (
-          <Card key={platform} variant="glass">
-            <CardContent className="py-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <StatusIcon status={strategy.status} />
-                <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[strategy.status]}`}>
-                  {strategy.status}
-                </span>
-              </div>
-              <p className="font-medium text-sm">{platform}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Strategy Cards */}
-      <div className="space-y-6">
-        {Object.entries(nexStrategy).map(([platformName, strategy]) => {
-          const platform = platforms?.find(p => p.name === platformName)
-          
-          return (
-            <Card key={platformName}>
-              {/* Platform Header */}
-              <div className="p-6 border-b border-[rgb(var(--border))] flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-[rgb(var(--muted))] flex items-center justify-center">
-                    {platformIcons[platform?.icon || 'mail']}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-xl font-semibold">{platformName}</h2>
-                      <Badge className={statusColors[strategy.status]}>
-                        {strategy.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-[rgb(var(--muted-fg))]">
-                      {strategy.accountInfo}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Strategy Content */}
-              <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-6">
-                  {/* Goal */}
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-[rgb(var(--muted-fg))] mb-2">
-                      <Target className="h-4 w-4" />
-                      <span>Goal</span>
-                    </div>
-                    <p className="text-[rgb(var(--fg))]">{strategy.goal}</p>
-                  </div>
-
-                  {/* Audience */}
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-[rgb(var(--muted-fg))] mb-2">
-                      <Users className="h-4 w-4" />
-                      <span>Target Audience</span>
-                    </div>
-                    <p className="text-[rgb(var(--fg))]">{strategy.audience}</p>
-                  </div>
-
-                  {/* Frequency */}
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-[rgb(var(--muted-fg))] mb-2">
-                      <Clock className="h-4 w-4" />
-                      <span>Posting Frequency</span>
-                    </div>
-                    <p className="text-[rgb(var(--fg))]">{strategy.frequency}</p>
-                  </div>
-
-                  {/* Voice */}
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-[rgb(var(--muted-fg))] mb-2">
-                      <MessageSquare className="h-4 w-4" />
-                      <span>Voice & Tone</span>
-                    </div>
-                    <p className="text-[rgb(var(--fg))] italic">&quot;{strategy.voice}&quot;</p>
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  {/* Content Mix */}
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-[rgb(var(--muted-fg))] mb-3">
-                      <FileText className="h-4 w-4" />
-                      <span>Content Mix</span>
-                    </div>
-                    <div className="space-y-2">
-                      {strategy.contentMix.map((item, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="flex-1">
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>{item.type}</span>
-                              <span className="text-[rgb(var(--muted-fg))]">{item.percentage}%</span>
-                            </div>
-                            <div className="h-2 bg-[rgb(var(--muted))] rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-[rgb(var(--accent))] rounded-full"
-                                style={{ width: `${item.percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Rules */}
-                  <div>
-                    <p className="text-sm text-[rgb(var(--muted-fg))] mb-2">Rules & Guidelines</p>
-                    <ul className="space-y-1">
-                      {strategy.rules.map((rule, i) => (
-                        <li key={i} className="text-sm flex items-start gap-2">
-                          <span className="text-[rgb(var(--accent))]">•</span>
-                          {rule}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )
-        })}
       </div>
     </div>
+  )
+}
+
+function StrategyCard({ strategy }: { strategy: any }) {
+  const platformColors: Record<string, string> = {
+    x: 'bg-blue-500/15 text-blue-400',
+    twitter: 'bg-blue-500/15 text-blue-400',
+    linkedin: 'bg-cyan-500/15 text-cyan-400',
+    substack: 'bg-amber-500/15 text-amber-400',
+    youtube: 'bg-rose-500/15 text-rose-400',
+    tiktok: 'bg-purple-500/15 text-purple-400',
+  }
+
+  const platformColor = platformColors[strategy.platform?.toLowerCase()] || 'bg-gray-500/15 text-gray-400'
+
+  return (
+    <div className="glass-card p-5 space-y-4">
+      {/* Platform Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${platformColor}`}>
+            {strategy.platform}
+          </span>
+          {strategy.status && (
+            <span className="text-[10px] text-4 uppercase tracking-wider">
+              {strategy.status}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Goals */}
+      {strategy.goals && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-4">
+            <Target className="w-3.5 h-3.5" />
+            <span className="text-[10px] uppercase tracking-wider font-medium">Goals</span>
+          </div>
+          <p className="text-sm text-2 leading-relaxed">{strategy.goals}</p>
+        </div>
+      )}
+
+      {/* Target Audience */}
+      {strategy.target_audience && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-4">
+            <Users className="w-3.5 h-3.5" />
+            <span className="text-[10px] uppercase tracking-wider font-medium">Target Audience</span>
+          </div>
+          <p className="text-sm text-2 leading-relaxed">{strategy.target_audience}</p>
+        </div>
+      )}
+
+      {/* Posting Frequency */}
+      {strategy.posting_frequency && (
+        <div className="flex items-center gap-3 pt-3 border-t border-[rgb(var(--glass-border))]">
+          <div className="flex items-center gap-1.5 text-3">
+            <Calendar className="w-3.5 h-3.5" />
+            <span className="text-xs">{strategy.posting_frequency}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Content Mix */}
+      {strategy.content_mix && strategy.content_mix.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-4">
+            <PieChart className="w-3.5 h-3.5" />
+            <span className="text-[10px] uppercase tracking-wider font-medium">Content Mix</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {strategy.content_mix.map((type: string, i: number) => (
+              <span key={i} className="text-xs px-2 py-0.5 rounded glass-inset text-3">
+                {type}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function XIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
   )
 }

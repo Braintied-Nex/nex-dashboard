@@ -1,305 +1,215 @@
-import { createClient } from '@/lib/supabase/server'
-import type { Post, Platform, Theme } from '@/lib/supabase/types'
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
-import { ChevronLeft, ChevronRight, Calendar, Clock, ArrowRight, FileText } from 'lucide-react'
-import Link from 'next/link'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { MonthViewClient, WeekViewClient, DayViewClient, CalendarPost } from './calendar-client'
 
-type PostWithRelations = Post & { platform: Platform | null; theme: Theme | null }
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-// Platform icons as simple components  
-const PlatformIcon = ({ name, className = "h-3.5 w-3.5" }: { name: string; className?: string }) => {
-  const icons: Record<string, React.ReactNode> = {
-    'X/Twitter': (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-      </svg>
-    ),
-    'LinkedIn': (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-      </svg>
-    ),
-    'Reddit': (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701z"/>
-      </svg>
-    ),
-  }
-  return <>{icons[name] || <FileText className={className} />}</>
+type ViewMode = 'day' | 'week' | 'month'
+type Platform = 'all' | 'x' | 'linkedin' | 'substack'
+
+interface Props {
+  searchParams: Promise<{ view?: string; date?: string; platform?: string }>
 }
 
-export default async function CalendarPage() {
-  const supabase = await createClient()
-  
-  const { data: posts } = await supabase
-    .from('nex_posts')
-    .select('*, platform:nex_platforms(*), theme:nex_themes(*)')
-    .in('status', ['scheduled', 'published', 'draft'])
-    .order('scheduled_for', { ascending: true }) as { data: PostWithRelations[] | null }
+// ─── Icons (for pills) ──────────────────────────────
 
-  // Generate calendar days for current month
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = today.getMonth()
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const startPad = firstDay.getDay()
-  
-  const days: (number | null)[] = []
-  for (let i = 0; i < startPad; i++) days.push(null)
-  for (let i = 1; i <= lastDay.getDate(); i++) days.push(i)
+const XIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+)
 
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+const LinkedInIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+)
+
+const SubstackIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24L12 18.11 22.54 24V10.812H1.46zM22.54 0H1.46v2.836h21.08V0z"/>
+  </svg>
+)
+
+const PLATFORM_PILLS = {
+  x:        { icon: XIcon,        color: 'text-zinc-400',   label: 'X' },
+  linkedin: { icon: LinkedInIcon, color: 'text-[#0A66C2]',  label: 'LinkedIn' },
+  substack: { icon: SubstackIcon, color: 'text-[#FF6719]',  label: 'Substack' },
+}
+
+const PLATFORM_IDS: Record<string, 'x' | 'linkedin' | 'substack'> = {
+  '9d0d9c90-b053-4746-a783-96b0fcc4edac': 'x',
+  '7da01258-53d2-4ebb-8ca3-01cfeef987be': 'linkedin',
+  '93f6be38-683d-4fef-81bd-9fba6de08edf': 'substack',
+}
+
+function resolveStatus(status: string): 'posted' | 'scheduled' | 'draft' {
+  if (status === 'published') return 'posted'
+  if (status === 'scheduled') return 'scheduled'
+  return 'draft'
+}
+
+// ─── Page ────────────────────────────────────────────
+
+export default async function CalendarPage({ searchParams }: Props) {
+  const params = await searchParams
+  const view = (params.view || 'week') as ViewMode
+  const platform = (params.platform || 'all') as Platform
+  const dateParam = params.date || new Date().toISOString().split('T')[0]
+  const currentDate = new Date(dateParam + 'T12:00:00')
+
+  const sb = createAdminClient()
+
+  const [{ data: contentPosts }, { data: actualPosts }] = await Promise.all([
+    sb.from('nex_posts')
+      .select('*')
+      .in('status', ['scheduled', 'draft', 'published'])
+      .order('scheduled_for', { ascending: true }),
+    sb.from('nex_x_post_metrics')
+      .select('*')
+      .neq('tweet_type', 'reply')
+      .order('created_at', { ascending: false })
+      .limit(500),
+  ])
+
+  // Normalize
+  const allPosts: CalendarPost[] = [
+    ...(actualPosts || []).map((p: any) => ({
+      id: p.tweet_id,
+      platform: 'x' as const,
+      status: 'posted' as const,
+      text: p.tweet_text || '',
+      time: p.created_at,
+      impressions: p.impressions,
+      likes: p.likes,
+      retweets: p.retweets,
+      repliesCount: p.replies,
+      engagementRate: p.engagement_rate,
+      bookmarks: p.bookmarks,
+      feedback: p.feedback,
+      feedbackNote: p.feedback_note,
+      externalUrl: `https://x.com/sentigen_ai/status/${p.tweet_id}`,
+    })),
+    ...(contentPosts || []).map((p: any) => ({
+      id: p.id,
+      platform: PLATFORM_IDS[p.platform_id] || 'x',
+      status: resolveStatus(p.status),
+      text: p.content || p.title || '',
+      time: p.scheduled_for || p.created_at,
+      feedback: p.feedback,
+      feedbackNote: p.feedback_note,
+    })),
   ]
 
-  // Stats
-  const scheduledPosts = posts?.filter(p => p.status === 'scheduled') || []
-  const thisMonthPosts = scheduledPosts.filter(p => {
-    if (!p.scheduled_for) return false
-    const d = new Date(p.scheduled_for)
-    return d.getMonth() === month && d.getFullYear() === year
-  })
+  const counts = {
+    all: allPosts.length,
+    x: allPosts.filter(p => p.platform === 'x').length,
+    linkedin: allPosts.filter(p => p.platform === 'linkedin').length,
+    substack: allPosts.filter(p => p.platform === 'substack').length,
+  }
 
-  // Get next 7 days of posts
-  const next7Days = []
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today)
-    date.setDate(today.getDate() + i)
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    const dayPosts = posts?.filter(p => 
-      p.scheduled_for?.startsWith(dateStr)
-    ) || []
-    next7Days.push({ date, posts: dayPosts })
+  const posts = platform === 'all' ? allPosts : allPosts.filter(p => p.platform === platform)
+  const postedCount = posts.filter(p => p.status === 'posted').length
+  const pendingCount = posts.filter(p => p.status !== 'posted').length
+
+  // Nav helpers
+  const prev = new Date(currentDate)
+  const next = new Date(currentDate)
+  if (view === 'day') { prev.setDate(currentDate.getDate() - 1); next.setDate(currentDate.getDate() + 1) }
+  else if (view === 'week') { prev.setDate(currentDate.getDate() - 7); next.setDate(currentDate.getDate() + 7) }
+  else { prev.setMonth(currentDate.getMonth() - 1); next.setMonth(currentDate.getMonth() + 1) }
+
+  const navQ = (d: Date) => `/calendar?view=${view}&date=${fmt(d)}&platform=${platform}`
+  const viewQ = (v: string) => `/calendar?view=${v}&date=${dateParam}&platform=${platform}`
+  const platQ = (p: string) => `/calendar?view=${view}&date=${dateParam}&platform=${p}`
+
+  // View title
+  let viewTitle = ''
+  if (view === 'month') {
+    viewTitle = currentDate.toLocaleDateString('en', { month: 'long', year: 'numeric' })
+  } else if (view === 'week') {
+    const start = new Date(currentDate)
+    start.setDate(currentDate.getDate() - currentDate.getDay())
+    const end = new Date(start)
+    end.setDate(start.getDate() + 6)
+    viewTitle = `${start.toLocaleDateString('en', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}`
+  } else {
+    viewTitle = currentDate.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   }
 
   return (
-    <div className="min-h-screen p-8 animate-in">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-5">
+
         {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-center gap-2 text-3 mb-2">
-            <Calendar className="h-4 w-4" />
-            <span className="text-sm font-medium">Content Schedule</span>
+        <header className="flex items-center justify-between">
+          <div>
+            <h1 className="text-[28px] font-semibold tracking-tight text-1">Calendar</h1>
+            <p className="text-2 text-sm mt-1">{postedCount} published · {pendingCount} pending</p>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-[28px] font-semibold text-1 tracking-tight">Calendar</h1>
-              <p className="text-sm text-3 mt-1">
-                {thisMonthPosts.length} posts scheduled this month
-              </p>
-            </div>
-            <Link 
-              href="/posts"
-              className="flex items-center gap-2 text-sm text-3 hover:text-2 transition-colors"
-            >
-              Manage Posts <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="flex items-center gap-1 glass-panel p-1">
+            {(['day', 'week', 'month'] as const).map(v => (
+              <a
+                key={v}
+                href={viewQ(v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                  view === v ? 'bg-[rgb(var(--fg))] text-[rgb(var(--bg))]' : 'text-3 hover:text-2'
+                }`}
+              >
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </a>
+            ))}
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Calendar */}
-          <div className="lg:col-span-2">
-            <Card>
-              {/* Month Navigation */}
-              <CardHeader className="flex-row items-center justify-between">
-                <button className="p-2 rounded-xl hover:bg-[rgb(var(--glass-inset))] transition-colors text-3 hover:text-1">
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <h2 className="text-lg font-semibold text-1">
-                  {monthNames[month]} {year}
-                </h2>
-                <button className="p-2 rounded-xl hover:bg-[rgb(var(--glass-inset))] transition-colors text-3 hover:text-1">
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </CardHeader>
+        {/* Platform filters + legend */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <a href={platQ('all')} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium ${platform === 'all' ? 'bg-[rgb(var(--fg))] text-[rgb(var(--bg))]' : 'glass-inset text-3 hover:text-2'}`}>
+              All <span className={platform === 'all' ? 'opacity-70' : 'text-4'}>{counts.all}</span>
+            </a>
+            {(Object.entries(PLATFORM_PILLS) as [string, typeof PLATFORM_PILLS.x][]).map(([key, cfg]) => {
+              const Icon = cfg.icon
+              const active = platform === key
+              return (
+                <a key={key} href={platQ(key)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium ${active ? 'bg-[rgb(var(--fg))] text-[rgb(var(--bg))]' : 'glass-inset text-3 hover:text-2'}`}>
+                  <Icon className={`w-3 h-3 ${active ? '' : cfg.color}`} />
+                  {cfg.label}
+                  <span className={active ? 'opacity-70' : 'text-4'}>{counts[key as keyof typeof counts]}</span>
+                </a>
+              )
+            })}
+          </div>
+          <div className="flex items-center gap-4 text-[11px] text-3">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500" /> Published</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" /> Scheduled</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-zinc-500" /> Draft</span>
+          </div>
+        </div>
 
-              <CardContent className="p-4">
-                {/* Day Headers */}
-                <div className="grid grid-cols-7 mb-2">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                    <div key={day} className="py-2 text-center text-xs font-medium text-4">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-1">
-                  {days.map((day, i) => {
-                    const isToday = day === today.getDate()
-                    const dateStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : ''
-                    const dayPosts = posts?.filter(p => 
-                      p.scheduled_for?.startsWith(dateStr) || p.published_at?.startsWith(dateStr)
-                    ) || []
-                    const hasPosts = dayPosts.length > 0
-
-                    return (
-                      <div
-                        key={i}
-                        className={`
-                          min-h-[90px] p-2 rounded-xl transition-colors
-                          ${day ? 'hover:bg-[rgb(var(--glass-inset))] cursor-pointer' : ''}
-                          ${isToday ? 'glass-inset' : ''}
-                        `}
-                      >
-                        {day && (
-                          <>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`
-                                inline-flex items-center justify-center w-6 h-6 text-xs rounded-lg
-                                ${isToday ? 'bg-[rgb(var(--fg))] text-[rgb(var(--bg))] font-bold' : 'text-2'}
-                              `}>
-                                {day}
-                              </span>
-                              {hasPosts && (
-                                <span className="text-[10px] text-4">{dayPosts.length}</span>
-                              )}
-                            </div>
-                            <div className="space-y-1">
-                              {dayPosts.slice(0, 2).map((post) => (
-                                <div
-                                  key={post.id}
-                                  className="flex items-center gap-1 text-[10px] px-1.5 py-1 rounded-md truncate"
-                                  style={{ 
-                                    backgroundColor: post.theme?.color ? `${post.theme.color}15` : 'rgb(var(--glass-inset))',
-                                    color: post.theme?.color || 'rgb(var(--fg-3))'
-                                  }}
-                                  title={post.content}
-                                >
-                                  {post.platform && <PlatformIcon name={post.platform.name} className="h-2.5 w-2.5 flex-shrink-0" />}
-                                  <span className="truncate">{post.content.slice(0, 15)}</span>
-                                </div>
-                              ))}
-                              {dayPosts.length > 2 && (
-                                <div className="text-[10px] text-4 px-1.5">
-                                  +{dayPosts.length - 2} more
-                                </div>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+        {/* Calendar panel */}
+        <div className="glass-panel p-5 space-y-4">
+          {/* Sub-header: title + nav */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-1">{viewTitle}</h2>
+            <div className="flex gap-2">
+              <a href={navQ(prev)} className="glass-inset p-2 rounded-lg"><ChevronLeft className="w-4 h-4 text-3" /></a>
+              <a href={navQ(new Date())} className="glass-inset px-3 py-2 rounded-lg text-xs text-3 hover:text-2">Today</a>
+              <a href={navQ(next)} className="glass-inset p-2 rounded-lg"><ChevronRight className="w-4 h-4 text-3" /></a>
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Next 7 Days */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Next 7 Days
-                </CardTitle>
-              </CardHeader>
-              <div className="divide-y divide-[rgb(var(--glass-border))]">
-                {next7Days.map(({ date, posts: dayPosts }, idx) => {
-                  const isToday = idx === 0
-                  const dayName = isToday ? 'Today' : date.toLocaleDateString('en', { weekday: 'short' })
-                  const dateNum = date.getDate()
-                  
-                  return (
-                    <div key={idx} className="px-6 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`
-                          w-10 h-10 rounded-xl flex flex-col items-center justify-center text-center
-                          ${isToday ? 'bg-[rgb(var(--fg))] text-[rgb(var(--bg))]' : 'glass-inset text-2'}
-                        `}>
-                          <span className="text-[10px] uppercase">{dayName}</span>
-                          <span className="text-sm font-semibold">{dateNum}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {dayPosts.length > 0 ? (
-                            <div className="space-y-1">
-                              {dayPosts.slice(0, 2).map(post => (
-                                <div key={post.id} className="flex items-center gap-2">
-                                  {post.platform && (
-                                    <PlatformIcon name={post.platform.name} className="h-3 w-3 text-3" />
-                                  )}
-                                  <span className="text-xs text-2 truncate">
-                                    {post.content.slice(0, 30)}...
-                                  </span>
-                                </div>
-                              ))}
-                              {dayPosts.length > 2 && (
-                                <span className="text-[10px] text-4">+{dayPosts.length - 2} more</span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-4">No posts scheduled</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </Card>
-
-            {/* Upcoming Scheduled */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming</CardTitle>
-              </CardHeader>
-              <div className="divide-y divide-[rgb(var(--glass-border))]">
-                {scheduledPosts.length > 0 ? (
-                  scheduledPosts.slice(0, 5).map((post) => (
-                    <div key={post.id} className="px-6 py-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 rounded-xl glass-inset flex flex-col items-center justify-center">
-                          <div className="text-lg font-bold text-1">
-                            {post.scheduled_for ? new Date(post.scheduled_for).getDate() : '—'}
-                          </div>
-                          <div className="text-[10px] text-4 uppercase">
-                            {post.scheduled_for ? new Date(post.scheduled_for).toLocaleDateString('en', { month: 'short' }) : ''}
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-1 line-clamp-2">{post.content}</p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            {post.platform && (
-                              <span className="flex items-center gap-1 text-[10px] text-3">
-                                <PlatformIcon name={post.platform.name} className="h-3 w-3" />
-                                {post.platform.name}
-                              </span>
-                            )}
-                            {post.scheduled_for && (
-                              <span className="text-[10px] text-4">
-                                {new Date(post.scheduled_for).toLocaleTimeString('en', { 
-                                  hour: 'numeric', 
-                                  minute: '2-digit' 
-                                })}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-6 py-8 text-center">
-                    <Calendar className="h-8 w-8 mx-auto mb-3 text-4 opacity-50" />
-                    <p className="text-sm text-3">No scheduled posts</p>
-                    <Link 
-                      href="/posts"
-                      className="inline-flex items-center gap-1 text-xs text-3 hover:text-2 mt-2"
-                    >
-                      Create a post <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
+          {/* Views */}
+          {view === 'month' && <MonthViewClient date={dateParam} posts={posts} platform={platform} />}
+          {view === 'week' && <WeekViewClient date={dateParam} posts={posts} platform={platform} />}
+          {view === 'day' && <DayViewClient date={dateParam} posts={posts} platform={platform} />}
         </div>
       </div>
     </div>
   )
+}
+
+function fmt(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
